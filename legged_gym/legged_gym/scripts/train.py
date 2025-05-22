@@ -39,9 +39,11 @@ from shutil import copyfile
 import torch
 import wandb
 
+LOG_DIR = "/home/ec2-user/logs"
+
 def train(args):
     args.headless = True
-    log_pth = LEGGED_GYM_ROOT_DIR + "/logs/{}/".format(args.proj_name) + args.exptid
+    log_pth = "{}/{}/".format(LOG_DIR, args.proj_name) + args.exptid
     try:
         os.makedirs(log_pth)
     except:
@@ -56,7 +58,7 @@ def train(args):
     
     if args.no_wandb:
         mode = "disabled"
-    wandb.init(project=args.proj_name, name=args.exptid, entity=args.wandb_entity, group=args.exptid[:3], mode=mode, dir="../../logs")
+    wandb.init(project=args.proj_name, name=args.exptid, entity=args.wandb_entity, group=args.exptid[:3], mode=mode, dir=LOG_DIR)
     wandb.save(LEGGED_GYM_ENVS_DIR + "/base/legged_robot_config.py", policy="now")
     wandb.save(LEGGED_GYM_ENVS_DIR + "/base/legged_robot.py", policy="now")
 
