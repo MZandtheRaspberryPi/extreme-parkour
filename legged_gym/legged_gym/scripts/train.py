@@ -31,6 +31,7 @@
 import numpy as np
 import os
 from datetime import datetime
+os.environ['VK_ICD_FILENAMES'] ='/usr/share/vulkan/icd.d/nvidia_icd.json'
 
 import isaacgym
 from legged_gym.envs import *

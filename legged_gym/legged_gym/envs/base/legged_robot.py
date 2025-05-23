@@ -957,9 +957,11 @@ class LeggedRobot(BaseTask):
         self.mass_params_tensor = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
         
         print("Creating env...")
-        for i in tqdm(range(self.num_envs)):
+        for i in range(self.num_envs):
+            print(f"working on {i}th env")
             # create env instance
             env_handle = self.gym.create_env(self.sim, env_lower, env_upper, int(np.sqrt(self.num_envs)))
+            print(f"created env handle")
             pos = self.env_origins[i].clone()
             if self.cfg.env.randomize_start_pos:
                 pos[:2] += torch_rand_float(-1., 1., (2,1), device=self.device).squeeze(1)
@@ -978,8 +980,9 @@ class LeggedRobot(BaseTask):
             self.gym.set_actor_rigid_body_properties(env_handle, anymal_handle, body_props, recomputeInertia=True)
             self.envs.append(env_handle)
             self.actor_handles.append(anymal_handle)
-            
+            print("attaching camera")
             self.attach_camera(i, env_handle, anymal_handle)
+            print("attached camera")
 
             self.mass_params_tensor[i, :] = torch.from_numpy(mass_params).to(self.device).to(torch.float)
         if self.cfg.domain_rand.randomize_friction:
