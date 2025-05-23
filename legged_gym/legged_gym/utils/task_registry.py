@@ -153,7 +153,7 @@ class TaskRegistry():
         #save resume path before creating a new log_dir
         resume = train_cfg.runner.resume
         if args.resumeid:
-            log_root = LEGGED_GYM_ROOT_DIR + f"/logs/{args.proj_name}/" + args.resumeid
+            log_root = log_dir.replace(args.exptid, args.resumeid)
             resume = True
         if resume:
             # load previously trained model
