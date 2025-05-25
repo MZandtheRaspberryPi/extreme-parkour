@@ -47,6 +47,11 @@ import matplotlib.pyplot as plt
 from time import time, sleep
 from legged_gym.utils import webviewer
 
+USE_THEIR_POLICY = False
+
+if not USE_THEIR_POLICY:
+    from rsl_lib import AlgoRunner
+
 def get_load_path(root, load_run=-1, checkpoint=-1, model_name_include="model"):
     if checkpoint==-1:
         models = [file for file in os.listdir(root) if model_name_include in file]
@@ -60,7 +65,7 @@ def play(args):
         web_viewer = webviewer.WebViewer()
     faulthandler.enable()
     exptid = args.exptid
-    log_pth = "../../logs/{}/".format(args.proj_name) + args.exptid
+    log_pth = "/docker_mount/logs/{}/".format(args.proj_name) + args.exptid
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
@@ -116,19 +121,43 @@ def play(args):
 
     # load policy
     train_cfg.runner.resume = True
-    ppo_runner, train_cfg, log_pth = task_registry.make_alg_runner(log_root = log_pth, env=env, name=args.task, args=args, train_cfg=train_cfg, return_log_dir=True)
-    
-    if args.use_jit:
-        path = os.path.join(log_pth, "traced")
-        model, checkpoint = get_load_path(root=path, checkpoint=args.checkpoint)
-        path = os.path.join(path, model)
-        print("Loading jit for policy: ", path)
-        policy_jit = torch.jit.load(path, map_location=env.device)
+
+    if USE_THEIR_POLICY:
+        ppo_runner, train_cfg, log_pth = task_registry.make_alg_runner(log_root = log_pth, env=env, name=args.task, args=args, train_cfg=train_cfg, return_log_dir=True)
+        
+        if args.use_jit:
+            path = os.path.join(log_pth, "traced")
+            model, checkpoint = get_load_path(root=path, checkpoint=args.checkpoint)
+            path = os.path.join(path, model)
+            print("Loading jit for policy: ", path)
+            policy_jit = torch.jit.load(path, map_location=env.device)
+        else:
+            policy = ppo_runner.get_inference_policy(device=env.device)
+        estimator = ppo_runner.get_estimator_inference_policy(device=env.device)
+        if env.cfg.depth.use_camera:
+            depth_encoder = ppo_runner.get_depth_encoder_inference_policy(device=env.device)
     else:
-        policy = ppo_runner.get_inference_policy(device=env.device)
-    estimator = ppo_runner.get_estimator_inference_policy(device=env.device)
-    if env.cfg.depth.use_camera:
-        depth_encoder = ppo_runner.get_depth_encoder_inference_policy(device=env.device)
+        algo_runner = AlgoRunner(log_dir = log_pth, env=env, args=args, env_name=args.task, device=args.device)
+        path_to_snapshots = os.path.join(log_pth, args.task, exptid)
+        all_snapshots = os.listdir(path_to_snapshots)
+        all_snapshots = [snap for snap in all_snapshots if "snapshot" in snap]
+        max_snap_idx = -1
+        max_iter_num = -1
+        for i in range(len(all_snapshots)):
+            snap = all_snapshots[i]
+            snap = snap.replace(".pt", "")
+            _, iter_num = snap.split("_")
+            iter_num = int(iter_num)
+            if iter_num > max_iter_num:
+                max_iter_num = iter_num
+                max_snap_idx = i
+        snap_path = os.path.join(path_to_snapshots, all_snapshots[max_snap_idx])
+        algo_runner.load_snapshot(snap_path)
+
+        policy = algo_runner.ac_agent.actor
+        policy.eval()
+        estimator = algo_runner.estimator
+        estimator.eval()
 
     actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
     infos = {}
