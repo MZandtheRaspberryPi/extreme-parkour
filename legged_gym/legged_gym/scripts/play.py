@@ -161,7 +161,7 @@ def play(args):
 
     actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
     infos = {}
-    infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
+    # infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
 
     for i in range(10*int(env.max_episode_length)):
         if args.use_jit:
@@ -191,7 +191,12 @@ def play(args):
             if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
                 actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
             else:
-                actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                if USE_THEIR_POLICY:
+                    actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                else:
+                    encoded_obs = algo_runner.encode_obs_phase1(obs, hist_encoding=True)
+                    dists = policy(encoded_obs.detach())
+                    actions = dists.sample()
             
         obs, _, rews, dones, infos = env.step(actions.detach())
         if args.web:
