@@ -50,7 +50,7 @@ from legged_gym.utils import webviewer
 USE_THEIR_POLICY = False
 
 if not USE_THEIR_POLICY:
-    from rsl_lib import AlgoRunner
+    from rl_lib.rl_algo import AlgoRunner
 
 def get_load_path(root, load_run=-1, checkpoint=-1, model_name_include="model"):
     if checkpoint==-1:
@@ -66,6 +66,7 @@ def play(args):
     faulthandler.enable()
     exptid = args.exptid
     log_pth = "/docker_mount/logs/{}/".format(args.proj_name) + args.exptid
+    print(f"log_pth: {log_pth}")
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
@@ -138,8 +139,7 @@ def play(args):
             depth_encoder = ppo_runner.get_depth_encoder_inference_policy(device=env.device)
     else:
         algo_runner = AlgoRunner(log_dir = log_pth, env=env, args=args, env_name=args.task, device=args.device)
-        path_to_snapshots = os.path.join(log_pth, args.task, exptid)
-        all_snapshots = os.listdir(path_to_snapshots)
+        all_snapshots = os.listdir(log_pth)
         all_snapshots = [snap for snap in all_snapshots if "snapshot" in snap]
         max_snap_idx = -1
         max_iter_num = -1
@@ -151,7 +151,7 @@ def play(args):
             if iter_num > max_iter_num:
                 max_iter_num = iter_num
                 max_snap_idx = i
-        snap_path = os.path.join(path_to_snapshots, all_snapshots[max_snap_idx])
+        snap_path = os.path.join(log_pth, all_snapshots[max_snap_idx])
         algo_runner.load_snapshot(snap_path)
 
         policy = algo_runner.ac_agent.actor
@@ -161,7 +161,7 @@ def play(args):
 
     actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
     infos = {}
-    infos["depth"] = env.depth_buffer.clone().to(ppo_runner.device)[:, -1] if ppo_runner.if_depth else None
+    infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
 
     for i in range(10*int(env.max_episode_length)):
         if args.use_jit:
@@ -188,7 +188,7 @@ def play(args):
             else:
                 depth_latent = None
             
-            if hasattr(ppo_runner.alg, "depth_actor"):
+            if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
                 actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
             else:
                 actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
