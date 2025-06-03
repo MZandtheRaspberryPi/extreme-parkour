@@ -958,7 +958,13 @@ class LeggedRobot(BaseTask):
         self.cam_tensors = []
         self.mass_params_tensor = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
         
+
+        fence_options = gymapi.AssetOptions()
+        fence_options.fix_base_link = True
+        self.fence_asset = self.gym.load_asset(self.sim, os.path.dirname(FENCE_PATH),
+                        os.path.basename(FENCE_PATH), fence_options)
         self.fence_handles = []
+
         print("Creating env...")
         for i in range(self.num_envs):
             print(f"working on {i}th env")
@@ -989,17 +995,16 @@ class LeggedRobot(BaseTask):
 
             self.mass_params_tensor[i, :] = torch.from_numpy(mass_params).to(self.device).to(torch.float)
 
-            if os.path.exists(FENCE_PATH):
+        if os.path.exists(FENCE_PATH):
+            print("adding fence")
+            
 
-                fence_options = gymapi.AssetOptions()
-                fence_options.fix_base_link = True
-                self.fence_asset = gym.load_asset(self.sim, os.path.dirname(FENCE_PATH),
-                        os.path.basename(asset_file), fence_options)
+            new_pos = self.env_origins[-1].clone()
+            new_pos[0] += 0.4
+            start_pose.p = gymapi.Vec3(*(new_pos + self.base_init_state[:3]))
 
-                start_pose.p[0] += 0.4
-
-                fence_handle = self.gym.create_actor(env_handle, self.fence_asset, start_pose, "fence", i, self.cfg.asset.self_collisions, 0)
-                self.fence_handles.append(fence_handle)
+            fence_handle = self.gym.create_actor(env_handle, self.fence_asset, start_pose, "fence", i, self.cfg.asset.self_collisions, 0)
+            self.fence_handles.append(fence_handle)
 
         if self.cfg.domain_rand.randomize_friction:
             self.friction_coeffs_tensor = self.friction_coeffs.to(self.device).to(torch.float).squeeze(-1)
