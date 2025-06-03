@@ -53,8 +53,6 @@ from tqdm import tqdm
 import cv2
 import matplotlib.pyplot as plt
 
-FENCE_PATH = "/docker_mount/fence.urdf"
-
 def euler_from_quaternion(quat_angle):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
@@ -466,7 +464,7 @@ class LeggedRobot(BaseTask):
         elif mesh_type is not None:
             raise ValueError("Terrain mesh type not recognised. Allowed types are [None, plane, heightfield, trimesh]")
         print("Finished creating ground. Time taken {:.2f} s".format(time() - start))
-
+        print("*"*80)
         self._create_envs()
 
     def set_camera(self, position, lookat):
@@ -958,7 +956,6 @@ class LeggedRobot(BaseTask):
         self.cam_tensors = []
         self.mass_params_tensor = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
         
-        self.fence_handles = []
         print("Creating env...")
         for i in range(self.num_envs):
             print(f"working on {i}th env")
@@ -988,19 +985,6 @@ class LeggedRobot(BaseTask):
             print("attached camera")
 
             self.mass_params_tensor[i, :] = torch.from_numpy(mass_params).to(self.device).to(torch.float)
-
-            if os.path.exists(FENCE_PATH):
-
-                fence_options = gymapi.AssetOptions()
-                fence_options.fix_base_link = True
-                self.fence_asset = gym.load_asset(self.sim, os.path.dirname(FENCE_PATH),
-                        os.path.basename(asset_file), fence_options)
-
-                start_pose.p[0] += 0.4
-
-                fence_handle = self.gym.create_actor(env_handle, self.fence_asset, start_pose, "fence", i, self.cfg.asset.self_collisions, 0)
-                self.fence_handles.append(fence_handle)
-
         if self.cfg.domain_rand.randomize_friction:
             self.friction_coeffs_tensor = self.friction_coeffs.to(self.device).to(torch.float).squeeze(-1)
 
