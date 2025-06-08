@@ -190,6 +190,7 @@ class PPO:
         mean_discriminator_loss = 0
         mean_discriminator_acc = 0
         mean_priv_reg_loss = 0
+        mean_returns = 0
         if self.actor_critic.is_recurrent:
             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         else:
@@ -274,6 +275,7 @@ class PPO:
                 mean_discriminator_loss += 0
                 mean_discriminator_acc += 0
                 mean_value += value_batch.mean().item()
+                mean_returns += returns_batch.mean().item()
 
         num_updates = self.num_learning_epochs * self.num_mini_batches
         mean_value_loss /= num_updates
@@ -284,9 +286,10 @@ class PPO:
         mean_priv_reg_loss /= num_updates
         mean_discriminator_loss /= num_updates
         mean_discriminator_acc /= num_updates
+        mean_returns /= num_updates
         self.storage.clear()
         self.update_counter()
-        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage, mean_value
+        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage, mean_value, mean_returns
 
     def update_dagger(self):
         mean_hist_latent_loss = 0

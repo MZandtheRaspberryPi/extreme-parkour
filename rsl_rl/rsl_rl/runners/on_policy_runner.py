@@ -195,7 +195,7 @@ class OnPolicyRunner:
                 start = stop
                 self.alg.compute_returns(critic_obs)
             
-            mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_disc_loss, mean_disc_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage, mean_value = self.alg.update()
+            mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_disc_loss, mean_disc_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage, mean_value, mean_returns = self.alg.update()
             if hist_encoding:
                 print("Updating dagger...")
                 mean_hist_latent_loss = self.alg.update_dagger()
@@ -424,6 +424,7 @@ class OnPolicyRunner:
         wandb_dict['Loss/discriminator_accuracy'] = locs['mean_disc_acc']
         wandb_dict['Loss/mean_advantage'] = locs['mean_advantage']
         wandb_dict['Policy/mean_value'] = locs['mean_value']
+        wandb_dict['Policy/mean_bootstrapped_returns'] = locs['mean_returns']
 
         wandb_dict['Policy/mean_noise_std'] = mean_std.item()
         wandb_dict['Perf/total_fps'] = fps
