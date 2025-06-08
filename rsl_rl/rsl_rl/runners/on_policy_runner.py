@@ -423,7 +423,7 @@ class OnPolicyRunner:
         wandb_dict['Loss/discriminator'] = locs['mean_disc_loss']
         wandb_dict['Loss/discriminator_accuracy'] = locs['mean_disc_acc']
         wandb_dict['Loss/mean_advantage'] = locs['mean_advantage']
-        wandb_dict['Loss/mean_value'] = locs['mean_value']
+        wandb_dict['Policy/mean_value'] = locs['mean_value']
 
         wandb_dict['Policy/mean_noise_std'] = mean_std.item()
         wandb_dict['Perf/total_fps'] = fps
