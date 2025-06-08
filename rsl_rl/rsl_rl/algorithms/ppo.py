@@ -183,6 +183,7 @@ class PPO:
 
     def update(self):
         mean_value_loss = 0
+        mean_advantage = 0
         mean_surrogate_loss = 0
         mean_estimator_loss = 0
         mean_discriminator_loss = 0
@@ -220,19 +221,19 @@ class PPO:
                 self.estimator_optimizer.step()
                 
                 # KL
-                if self.desired_kl != None and self.schedule == 'adaptive':
-                    with torch.inference_mode():
-                        kl = torch.sum(
-                            torch.log(sigma_batch / old_sigma_batch + 1.e-5) + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch)) / (2.0 * torch.square(sigma_batch)) - 0.5, axis=-1)
-                        kl_mean = torch.mean(kl)
+                # if self.desired_kl != None and self.schedule == 'adaptive':
+                #     with torch.inference_mode():
+                #         kl = torch.sum(
+                #             torch.log(sigma_batch / old_sigma_batch + 1.e-5) + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch)) / (2.0 * torch.square(sigma_batch)) - 0.5, axis=-1)
+                #         kl_mean = torch.mean(kl)
 
-                        if kl_mean > self.desired_kl * 2.0:
-                            self.learning_rate = max(1e-5, self.learning_rate / 1.5)
-                        elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
-                            self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+                #         if kl_mean > self.desired_kl * 2.0:
+                #             self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                #         elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
+                #             self.learning_rate = min(1e-2, self.learning_rate * 1.5)
                         
-                        for param_group in self.optimizer.param_groups:
-                            param_group['lr'] = self.learning_rate
+                #         for param_group in self.optimizer.param_groups:
+                #             param_group['lr'] = self.learning_rate
 
 
                 # Surrogate loss
@@ -241,16 +242,16 @@ class PPO:
                 surrogate_clipped = -torch.squeeze(advantages_batch) * torch.clamp(ratio, 1.0 - self.clip_param,
                                                                                 1.0 + self.clip_param)
                 surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
-
+                
                 # Value function loss
-                if self.use_clipped_value_loss:
-                    value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(-self.clip_param,
-                                                                                                    self.clip_param)
-                    value_losses = (value_batch - returns_batch).pow(2)
-                    value_losses_clipped = (value_clipped - returns_batch).pow(2)
-                    value_loss = torch.max(value_losses, value_losses_clipped).mean()
-                else:
-                    value_loss = (returns_batch - value_batch).pow(2).mean()
+                # if self.use_clipped_value_loss:
+                #     value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(-self.clip_param,
+                #                                                                                     self.clip_param)
+                #     value_losses = (value_batch - returns_batch).pow(2)
+                #     value_losses_clipped = (value_clipped - returns_batch).pow(2)
+                #     value_loss = torch.max(value_losses, value_losses_clipped).mean()
+                # else:
+                value_loss = (returns_batch - value_batch).pow(2).mean()
 
                 loss = surrogate_loss + \
                        self.value_loss_coef * value_loss - \
@@ -264,6 +265,7 @@ class PPO:
                 nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
                 self.optimizer.step()
 
+                mean_advantage += advantages_batch.mean().item()
                 mean_value_loss += value_loss.item()
                 mean_surrogate_loss += surrogate_loss.item()
                 mean_estimator_loss += estimator_loss.item()
@@ -273,6 +275,7 @@ class PPO:
 
         num_updates = self.num_learning_epochs * self.num_mini_batches
         mean_value_loss /= num_updates
+        mean_advantage /= num_updates
         mean_surrogate_loss /= num_updates
         mean_estimator_loss /= num_updates
         mean_priv_reg_loss /= num_updates
@@ -280,7 +283,7 @@ class PPO:
         mean_discriminator_acc /= num_updates
         self.storage.clear()
         self.update_counter()
-        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef
+        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage
 
     def update_dagger(self):
         mean_hist_latent_loss = 0

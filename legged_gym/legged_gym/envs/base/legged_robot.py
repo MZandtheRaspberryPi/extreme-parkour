@@ -956,12 +956,9 @@ class LeggedRobot(BaseTask):
         self.cam_tensors = []
         self.mass_params_tensor = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
         
-        print("Creating env...")
-        for i in range(self.num_envs):
-            print(f"working on {i}th env")
+        for i in tqdm(range(self.num_envs)):
             # create env instance
             env_handle = self.gym.create_env(self.sim, env_lower, env_upper, int(np.sqrt(self.num_envs)))
-            print(f"created env handle")
             pos = self.env_origins[i].clone()
             if self.cfg.env.randomize_start_pos:
                 pos[:2] += torch_rand_float(-1., 1., (2,1), device=self.device).squeeze(1)
