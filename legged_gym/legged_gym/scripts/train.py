@@ -40,7 +40,7 @@ from shutil import copyfile
 import torch
 import wandb
 
-LOG_DIR = "/home/ubuntu/docker_mount/logs"
+LOG_DIR = "/home/gymuser/docker_mount/logs"
 
 def train(args):
     args.headless = True
