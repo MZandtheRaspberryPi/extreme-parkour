@@ -183,6 +183,7 @@ class PPO:
 
     def update(self):
         mean_value_loss = 0
+        mean_value = 0
         mean_advantage = 0
         mean_surrogate_loss = 0
         mean_estimator_loss = 0
@@ -272,9 +273,11 @@ class PPO:
                 mean_priv_reg_loss += priv_reg_loss.item()
                 mean_discriminator_loss += 0
                 mean_discriminator_acc += 0
+                mean_value += value_batch.mean().item()
 
         num_updates = self.num_learning_epochs * self.num_mini_batches
         mean_value_loss /= num_updates
+        mean_value /= num_updates
         mean_advantage /= num_updates
         mean_surrogate_loss /= num_updates
         mean_estimator_loss /= num_updates
@@ -283,7 +286,7 @@ class PPO:
         mean_discriminator_acc /= num_updates
         self.storage.clear()
         self.update_counter()
-        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage
+        return mean_value_loss, mean_surrogate_loss, mean_estimator_loss, mean_discriminator_loss, mean_discriminator_acc, mean_priv_reg_loss, priv_reg_coef, mean_advantage, mean_value
 
     def update_dagger(self):
         mean_hist_latent_loss = 0
