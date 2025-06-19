@@ -40,7 +40,7 @@ from .cassie.cassie_config import CassieRoughCfg, CassieRoughCfgPPO
 from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
 from .a1.a1_parkour_config import A1ParkourCfg, A1ParkourCfgPPO
 from .go1.go1_config import Go1RoughCfg, Go1RoughCfgPPO
-from .go2.go2_config import Go1RoughCfg, Go2RoughCfgPPO
+from .go2.go2_config import Go2RoughCfg, Go2RoughCfgPPO
 
 import os
 
