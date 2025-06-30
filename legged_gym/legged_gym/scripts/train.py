@@ -43,7 +43,7 @@ import wandb
 LOG_DIR = "/docker_mount/logs"
 
 def train(args):
-    args.headless = True
+    args.headless = False
     log_pth = "{}/{}/".format(LOG_DIR, args.proj_name) + args.exptid
     try:
         os.makedirs(log_pth)
