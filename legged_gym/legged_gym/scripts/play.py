@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 from time import time, sleep
 from legged_gym.utils import webviewer
 
-USE_THEIR_POLICY = False
+USE_THEIR_POLICY = True
 
 if not USE_THEIR_POLICY:
     from rl_lib.rl_algo import AlgoRunner

@@ -81,6 +81,8 @@ class TaskRegistry():
         # if no args passed get command line arguments
         if args is None:
             args = get_args()
+        print("args")
+        print(args)
         # check if there is a registered env with that name
         if name in self.task_classes:
             task_class = self.get_task_class(name)
@@ -91,6 +93,8 @@ class TaskRegistry():
             env_cfg, _ = self.get_cfgs(name)
         # override cfg from args (if specified)
         env_cfg, _ = update_cfg_from_args(env_cfg, None, args)
+        print("env cfg")
+        print(class_to_dict(env_cfg))
         set_seed(env_cfg.seed)
         # parse sim params (convert to dict first)
         sim_params = {"sim": class_to_dict(env_cfg.sim)}
