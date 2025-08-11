@@ -49,6 +49,8 @@ class TaskRegistry():
         self.train_cfgs = {}
     
     def register(self, name: str, task_class: VecEnv, env_cfg: LeggedRobotCfg, train_cfg: LeggedRobotCfgPPO):
+        print(f"registering {name}, type: {type(task_class)}, env_cfg: {type(env_cfg)}")
+        print(f"asset: {env_cfg.asset.file}")
         self.task_classes[name] = task_class
         self.env_cfgs[name] = env_cfg
         self.train_cfgs[name] = train_cfg
@@ -81,6 +83,7 @@ class TaskRegistry():
         # if no args passed get command line arguments
         if args is None:
             args = get_args()
+        print(f"name: {name}")
         print("args", flush=True)
         print(args, flush=True)
         # check if there is a registered env with that name
@@ -88,6 +91,7 @@ class TaskRegistry():
             task_class = self.get_task_class(name)
         else:
             raise ValueError(f"Task with name: {name} was not registered")
+        print(f"task class: {task_class}, {type(task_class)}")
         if env_cfg is None:
             # load config files
             env_cfg, _ = self.get_cfgs(name)

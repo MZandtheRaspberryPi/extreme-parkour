@@ -190,8 +190,7 @@ class LeggedRobot(BaseTask):
             depth_image_ = self.gym.get_camera_image_gpu_tensor(self.sim, 
                                                                 self.envs[i], 
                                                                 self.cam_handles[i],
-                                                                gymapi.IMAGE_DEPTH)
-            
+                                                                gymapi.IMAGE_DEPTH)            
             depth_image = gymtorch.wrap_tensor(depth_image_)
             depth_image = self.process_depth_image(depth_image, i)
 
@@ -282,10 +281,12 @@ class LeggedRobot(BaseTask):
                 cv2.waitKey(1)
 
     def reindex_feet(self, vec):
-        return vec[:, [1, 0, 3, 2]]
+        return vec
+        # return vec[:, [1, 0, 3, 2]]
 
     def reindex(self, vec):
-        return vec[:, [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
+        return vec
+        # return vec[:, [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
 
     def check_termination(self):
         """ Check if environments need to be reset
@@ -929,8 +930,10 @@ class LeggedRobot(BaseTask):
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
 
+        print(f"body names: {body_names}")
+        print(f"feet_names names: {feet_names}")
 
-        for s in ["FR_foot", "FL_foot", "RR_foot", "RL_foot"]:
+        for s in ["FR_foot", "FL_foot", "RL_foot", "RR_foot"]:
             feet_idx = self.gym.find_asset_rigid_body_index(robot_asset, s)
             sensor_pose = gymapi.Transform(gymapi.Vec3(0.0, 0.0, 0.0))
             self.gym.create_asset_force_sensor(robot_asset, feet_idx, sensor_pose)
@@ -980,6 +983,8 @@ class LeggedRobot(BaseTask):
             self.attach_camera(i, env_handle, anymal_handle)
 
             self.mass_params_tensor[i, :] = torch.from_numpy(mass_params).to(self.device).to(torch.float)
+
+        print(f"mass params tensor 0: {self.mass_params_tensor[0, :]}")
         if self.cfg.domain_rand.randomize_friction:
             self.friction_coeffs_tensor = self.friction_coeffs.to(self.device).to(torch.float).squeeze(-1)
 
@@ -995,15 +1000,15 @@ class LeggedRobot(BaseTask):
         for i in range(len(termination_contact_names)):
             self.termination_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], termination_contact_names[i])
 
-        hip_names = ["FR_hip_joint", "FL_hip_joint", "RR_hip_joint", "RL_hip_joint"]
+        hip_names = ["FR_hip_joint", "FL_hip_joint", "RL_hip_joint", "RR_hip_joint"]
         self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i, name in enumerate(hip_names):
             self.hip_indices[i] = self.dof_names.index(name)
-        thigh_names = ["FR_thigh_joint", "FL_thigh_joint", "RR_thigh_joint", "RL_thigh_joint"]
+        thigh_names = ["FR_thigh_joint", "FL_thigh_joint", "RL_thigh_joint", "RR_thigh_joint"]
         self.thigh_indices = torch.zeros(len(thigh_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i, name in enumerate(thigh_names):
             self.thigh_indices[i] = self.dof_names.index(name)
-        calf_names = ["FR_calf_joint", "FL_calf_joint", "RR_calf_joint", "RL_calf_joint"]
+        calf_names = ["FR_calf_joint", "FL_calf_joint","RL_calf_joint", "RR_calf_joint"]
         self.calf_indices = torch.zeros(len(calf_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i, name in enumerate(calf_names):
             self.calf_indices[i] = self.dof_names.index(name)

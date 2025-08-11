@@ -32,6 +32,8 @@ from legged_gym import LEGGED_GYM_ROOT_DIR
 import os
 import code
 
+import matplotlib.pyplot as plt
+
 import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Logger
@@ -47,32 +49,28 @@ import matplotlib.pyplot as plt
 from time import time, sleep
 from legged_gym.utils import webviewer
 
-USE_THEIR_POLICY = True
 
-if not USE_THEIR_POLICY:
-    from rl_lib.rl_algo import AlgoRunner
+def get_control(num_envs: int, cur_time: float):
+    pass
 
-def get_load_path(root, load_run=-1, checkpoint=-1, model_name_include="model"):
-    if checkpoint==-1:
-        models = [file for file in os.listdir(root) if model_name_include in file]
-        models.sort(key=lambda m: '{0:0>15}'.format(m))
-        model = models[-1]
-        checkpoint = model.split("_")[-1].split(".")[0]
-    return model, checkpoint
+
 
 def play(args):
+
+
     if args.web:
         web_viewer = webviewer.WebViewer()
     faulthandler.enable()
     exptid = args.exptid
-    log_pth = "/docker_mount/logs/{}/".format(args.proj_name) + args.exptid
+    log_pth = "/docker_mount/logs/{}/".format("torque_data")
     print(f"log_pth: {log_pth}")
 
+    # args.task = "go2"
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     if args.nodelay:
         env_cfg.domain_rand.action_delay_view = 0
-    env_cfg.env.num_envs = 16 if not args.save else 64
+    env_cfg.env.num_envs = 16
     env_cfg.env.episode_length_s = 60
     env_cfg.commands.resampling_time = 60
     env_cfg.terrain.num_rows = 5
@@ -111,105 +109,119 @@ def play(args):
     env_cfg.domain_rand.randomize_base_mass = False
     env_cfg.domain_rand.randomize_base_com = False
 
+
     depth_latent_buffer = []
     # prepare environment
     env: LeggedRobot
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     obs = env.get_observations()
 
+    target_joint_idx = -1
+    target_joint_name = "FL_calf_joint"
+    for i in range(env.num_dofs):
+        name = env.dof_names[i]
+        print(name)
+        if name == target_joint_name:
+            target_joint_idx = i
+    
+    print("default pos")
+    print(env.default_dof_pos_all[0])
+
     if args.web:
         web_viewer.setup(env)
+    run_time = 5.0
+    start_move = 2.0
+    move_radians = -np.pi / 8
+    time_to_move = 0.5
+    time_to_stay = 0.5
+  
+    actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
 
-    # load policy
-    train_cfg.runner.resume = True
+    num_iterations = int(run_time / env.dt)
 
-    if USE_THEIR_POLICY:
-        ppo_runner, train_cfg, log_pth = task_registry.make_alg_runner(log_root = log_pth, env=env, name=args.task, args=args, train_cfg=train_cfg, return_log_dir=True)
-        
-        if args.use_jit:
-            path = os.path.join(log_pth, "traced")
-            model, checkpoint = get_load_path(root=path, checkpoint=args.checkpoint)
-            path = os.path.join(path, model)
-            print("Loading jit for policy: ", path)
-            policy_jit = torch.jit.load(path, map_location=env.device)
-        else:
-            policy = ppo_runner.get_inference_policy(device=env.device)
-        estimator = ppo_runner.get_estimator_inference_policy(device=env.device)
-        if env.cfg.depth.use_camera:
-            depth_encoder = ppo_runner.get_depth_encoder_inference_policy(device=env.device)
-    else:
-        algo_runner = AlgoRunner(log_dir = log_pth, env=env, args=args, env_name=args.task, device=args.device)
-        all_snapshots = os.listdir(log_pth)
-        all_snapshots = [snap for snap in all_snapshots if "snapshot" in snap]
-        max_snap_idx = -1
-        max_iter_num = -1
-        for i in range(len(all_snapshots)):
-            snap = all_snapshots[i]
-            snap = snap.replace(".pt", "")
-            _, iter_num = snap.split("_")
-            iter_num = int(iter_num)
-            if iter_num > max_iter_num:
-                max_iter_num = iter_num
-                max_snap_idx = i
-        snap_path = os.path.join(log_pth, all_snapshots[max_snap_idx])
-        algo_runner.load_snapshot(snap_path)
+    robot_id = env.lookat_id
 
-        policy = algo_runner.ac_agent.actor
-        policy.eval()
-        estimator = algo_runner.estimator
-        estimator.eval()
+    # we track time, pos, and vel
+    tracked_data = np.zeros((num_iterations, 5), dtype=np.float32)
+    # tracked_data[:, 4] = env.default_dof_pos_all[robot_id, target_joint_idx].cpu().numpy()
+    tracked_data[:, 4] = 0.0
+    
+    increments_to_move = int(time_to_move / env.dt)
+    angle_increment = move_radians / increments_to_move
+
+    start_up_move_idx = int(start_move/env.dt)
+
+    start_down_move_idx = int((start_move + time_to_move + time_to_stay)/env.dt)
+
+    # action scale: target angle = actionScale * action + defaultAngle
+    action_scale = 0.25
+    # moves = env.default_dof_pos_all[robot_id, target_joint_idx].cpu().numpy() + np.arange(increments_to_move) * angle_increment
+    default_pos_targ = env.default_dof_pos_all[robot_id, target_joint_idx].cpu().numpy() 
+    moves = (1/action_scale) * np.arange(increments_to_move) * angle_increment
+
+
+    tracked_data[start_up_move_idx: start_up_move_idx + increments_to_move, 4] = moves
+
+    tracked_data[start_up_move_idx + increments_to_move : start_down_move_idx, 4] = moves[-1] # env.default_dof_pos_all[robot_id, target_joint_idx].cpu().numpy() + move_radians
+
+    tracked_data[start_down_move_idx: start_down_move_idx + increments_to_move, 4] = np.flip(moves)
+
+    cur_time = 0.0
 
     actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
-    infos = {}
-    infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
 
-    for i in range(10*int(env.max_episode_length)):
-        if args.use_jit:
-            if env.cfg.depth.use_camera:
-                if infos["depth"] is not None:
-                    depth_latent = torch.ones((env_cfg.env.num_envs, 32), device=env.device)
-                    actions, depth_latent = policy_jit(obs.detach(), True, infos["depth"], depth_latent)
-                else:
-                    depth_buffer = torch.ones((env_cfg.env.num_envs, 58, 87), device=env.device)
-                    actions, depth_latent = policy_jit(obs.detach(), False, depth_buffer, depth_latent)
-            else:
-                obs_jit = torch.cat((obs.detach()[:, :env_cfg.env.n_proprio+env_cfg.env.n_priv], obs.detach()[:, -env_cfg.env.history_len*env_cfg.env.n_proprio:]), dim=1)
-                actions = policy(obs_jit)
-        else:
-            if env.cfg.depth.use_camera:
-                if infos["depth"] is not None:
-                    obs_student = obs[:, :env.cfg.env.n_proprio].clone()
-                    obs_student[:, 6:8] = 0
-                    depth_latent_and_yaw = depth_encoder(infos["depth"], obs_student)
-                    depth_latent = depth_latent_and_yaw[:, :-2]
-                    yaw = depth_latent_and_yaw[:, -2:]
-                obs[:, 6:8] = 1.5*yaw
-                    
-            else:
-                depth_latent = None
+    reindex_arr = [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]
+
+    transformed_idx = reindex_arr[target_joint_idx]
+
+    print(f"orig idx: {target_joint_idx}, their idx: {transformed_idx}")
+
+    cur_time = 0.0
+
+    for i in range(num_iterations):
+
+        tracked_data[i, 0] = cur_time
+
+        dof_pos = env.dof_pos[robot_id, target_joint_idx].item()
+        dof_vel = env.dof_vel[robot_id, target_joint_idx].item()
+        computed_torques = env.torques[robot_id, target_joint_idx].item()
+        tracked_data[i, 1] = dof_pos
+        tracked_data[i, 2] = dof_vel
+        tracked_data[i, 3] = computed_torques
+
+        actions[robot_id, target_joint_idx] = torch.tensor(tracked_data[i, 4], device=env.device)
+
             
-            if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
-                actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
-            else:
-                if USE_THEIR_POLICY:
-                    actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
-                else:
-                    encoded_obs = algo_runner.encode_obs_phase1(obs, hist_encoding=True)
-                    dists = policy(encoded_obs.detach())
-                    actions = dists.sample()
-            
+
+
+
         obs, _, rews, dones, infos = env.step(actions.detach())
-        if args.web:
-            web_viewer.render(fetch_results=True,
-                        step_graphics=True,
-                        render_all_camera_sensors=True,
-                        wait_for_page_load=True)
-        print("time:", env.episode_length_buf[env.lookat_id].item() / 50, 
-              "cmd vx", env.commands[env.lookat_id, 0].item(),
-              "actual vx", env.base_lin_vel[env.lookat_id, 0].item(), )
+
+        print(f"dof pos: {env.dof_pos[robot_id, :]}")
         
-        id = env.lookat_id
+
+        cur_time += env.dt
         
+
+    fig, axes = plt.subplots(4, 1, sharex=True)
+
+    axes[0].plot(tracked_data[:, 0], tracked_data[:, 1], label=f"{target_joint_name}_pos")
+    axes[0].plot(tracked_data[:, 0], default_pos_targ + tracked_data[:, 4]  * action_scale, linestyle='dashed', label=f"{target_joint_name}_goal_pos")
+    axes[0].set_ylabel("pos")
+    axes[0].legend()
+    axes[1].plot(tracked_data[:, 0], tracked_data[:, 2], label=f"{target_joint_name}_vel")
+    axes[1].set_ylabel("vel")
+    axes[1].legend()
+    axes[2].plot(tracked_data[:, 0], tracked_data[:, 3], label=f"{target_joint_name}_torque")
+    axes[2].set_ylabel("torque")
+    axes[2].legend()
+    axes[3].plot(tracked_data[:, 0], tracked_data[:, 4] * action_scale, label=f"{target_joint_name}_pos_diff")
+    axes[3].set_ylabel("pos_diff")
+    axes[3].set_xlabel("time")
+    axes[3].legend()
+    
+    plt.show()
+
 
 if __name__ == '__main__':
     EXPORT_POLICY = False

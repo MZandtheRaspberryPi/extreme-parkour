@@ -4,7 +4,7 @@ import os.path as osp
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-go2_action_scale = 0.5
+go2_action_scale = 0.25
 go2_const_dof_range = dict(
     Hip_max= 1.0472,
     Hip_min= -1.0472,
@@ -36,25 +36,6 @@ class Go2RoughCfg( LeggedRobotCfg ):
             "RR_calf_joint": -1.5,
         }
 
-    class init_state_slope( LeggedRobotCfg.init_state ):
-        pos = [0.5, 0.0, 0.24] # x,y,z [m]
-        default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': 0.03,   # [rad]
-            'RL_hip_joint': 0.03,   # [rad]
-            'FR_hip_joint': -0.03,  # [rad]
-            'RR_hip_joint': -0.03,   # [rad]
-
-            'FL_thigh_joint': 1.0,     # [rad]
-            'RL_thigh_joint': 1.8,   # [rad]1.8
-            'FR_thigh_joint': 1.0,     # [rad]
-            'RR_thigh_joint': 1.8,   # [rad]
-
-            'FL_calf_joint': -2.2,   # [rad]
-            'RL_calf_joint': -1.2,    # [rad]
-            'FR_calf_joint': -2.2,  # [rad]
-            'RR_calf_joint': -1.2,    # [rad]
-        }
-
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
@@ -76,13 +57,18 @@ class Go2RoughCfg( LeggedRobotCfg ):
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = ["base"]#, "thigh", "calf"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+        sdk_dof_range = go2_const_dof_range
+        dof_velocity_override = 35.
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.25
+        base_height_target = 1.0
+        max_contact_force = 100
         # class scales( LeggedRobotCfg.rewards.scales ):
             # torques = -0.0002
             # dof_pos_limits = -10.0
+
+    
 
 class Go2RoughCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
