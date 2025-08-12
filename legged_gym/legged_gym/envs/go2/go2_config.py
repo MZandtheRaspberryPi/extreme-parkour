@@ -68,6 +68,29 @@ class Go2RoughCfg( LeggedRobotCfg ):
             # torques = -0.0002
             # dof_pos_limits = -10.0
 
+    class depth:
+        use_camera = False
+        camera_num_envs = 192
+        camera_terrain_num_rows = 10
+        camera_terrain_num_cols = 20
+
+        position = [0.24, -0.0175, 0.12]  # front camera
+        angle = [21.2, 24.6]  # pitch down
+
+        update_interval = 5  # 5 works without retraining, 8 worse
+
+        original = (int(640/4), int(480/4))
+        resized = (87, 58)
+        horizontal_fov = 88
+        buffer_len = 2
+        
+        near_clip = 0
+        far_clip = 2
+        dis_noise = 0.0
+        
+        scale = 1
+        invert = True
+
     
 
 class Go2RoughCfgPPO( LeggedRobotCfgPPO ):

@@ -191,14 +191,11 @@ def play(args):
 
         actions[robot_id, target_joint_idx] = torch.tensor(tracked_data[i, 4], device=env.device)
 
-            
-
-
-
         obs, _, rews, dones, infos = env.step(actions.detach())
 
         print(f"dof pos: {env.dof_pos[robot_id, :]}")
-        
+        base_pos = (env.root_states[robot_id, :3]).cpu().numpy()
+        print(f"base pos: {base_pos}")
 
         cur_time += env.dt
         

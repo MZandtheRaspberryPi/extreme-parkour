@@ -35,7 +35,7 @@ from .base_config import BaseConfig
 import torch.nn as nn
 class LeggedRobotCfg(BaseConfig):
     class debug:
-        render_vis = True
+        render_vis = False
     class play:
         load_student_config = False
         mask_priv_obs = False
