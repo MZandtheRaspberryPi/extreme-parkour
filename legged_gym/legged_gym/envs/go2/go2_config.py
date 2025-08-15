@@ -89,7 +89,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         
         near_clip = 0
         far_clip = 2
-        dis_noise = 0.0
+        dis_noise = 0.3
         
         scale = 1
         invert = True
