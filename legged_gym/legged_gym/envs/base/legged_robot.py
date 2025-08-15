@@ -890,7 +890,7 @@ class LeggedRobot(BaseTask):
             ang = []
             for i in range(3):
                 p = np.random.uniform(config.position_min[i], config.position_max[i])
-                a = np.random.uniform(config.angle_min[0], config.angle_max[1])
+                a = np.random.uniform(config.angle_min[i], config.angle_max[i])
                 pos.append(p)
                 ang.append(np.radians(a))
                         
