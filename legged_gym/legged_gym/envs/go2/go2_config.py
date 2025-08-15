@@ -74,8 +74,11 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        position = [0.24, -0.0175, 0.12]  # front camera
-        angle = [21.2, 24.6]  # pitch down
+        position_min = [0.28, 0, 0.10]  # front camera
+        position_max = [0.32, 0, 0.14]  # front camera
+        # degrees, euler
+        angle_min = [-1, 21.2, 0.0]
+        angle_max = [1, 24.6, 0.0]
 
         update_interval = 5  # 5 works without retraining, 8 worse
 
@@ -86,7 +89,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         
         near_clip = 0
         far_clip = 2
-        dis_noise = 0.0
+        dis_noise = 1.0
         
         scale = 1
         invert = True
@@ -99,3 +102,11 @@ class Go2RoughCfgPPO( LeggedRobotCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'rough_go2'
+
+    class depth_encoder:
+        if_depth = Go2RoughCfg.depth.use_camera
+        depth_shape = Go2RoughCfg.depth.resized
+        buffer_len = Go2RoughCfg.depth.buffer_len
+        hidden_dims = 512
+        learning_rate = 1.e-3
+        num_steps_per_env = Go2RoughCfg.depth.update_interval * 24

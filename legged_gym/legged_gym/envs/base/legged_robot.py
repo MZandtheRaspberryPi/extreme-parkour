@@ -875,16 +875,27 @@ class LeggedRobot(BaseTask):
             camera_horizontal_fov = self.cfg.depth.horizontal_fov 
             camera_props.horizontal_fov = camera_horizontal_fov
 
+            # position_min = [0.28, 0, 0.10]  # front camera
+            # position_max = [0.32, 0, 0.14]  # front camera
+            # # degrees, euler
+            # angle_min = [-1, 21.2, 0.0]
+            # angle_max = [1, 24.6, 0.0]
+
             camera_handle = self.gym.create_camera_sensor(env_handle, camera_props)
             self.cam_handles.append(camera_handle)
             
             local_transform = gymapi.Transform()
-            
-            camera_position = np.copy(config.position)
-            camera_angle = np.random.uniform(config.angle[0], config.angle[1])
-            
-            local_transform.p = gymapi.Vec3(*camera_position)
-            local_transform.r = gymapi.Quat.from_euler_zyx(0, np.radians(camera_angle), 0)
+
+            pos = []
+            ang = []
+            for i in range(3):
+                p = np.random.uniform(config.position_min[i], config.position_max[i])
+                a = np.random.uniform(config.angle_min[0], config.angle_max[1])
+                pos.append(p)
+                ang.append(np.radians(a))
+                        
+            local_transform.p = gymapi.Vec3(*pos)
+            local_transform.r = gymapi.Quat.from_euler_zyx(*ang)
             root_handle = self.gym.get_actor_root_rigid_body_handle(env_handle, actor_handle)
             
             self.gym.attach_camera_to_body(camera_handle, env_handle, root_handle, local_transform, gymapi.FOLLOW_TRANSFORM)

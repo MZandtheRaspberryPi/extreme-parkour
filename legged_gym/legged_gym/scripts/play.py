@@ -97,16 +97,15 @@ def play(args):
                                     "large stairs down": 0.,
                                     "parkour": 0.2,
                                     "parkour_hurdle": 0.2,
-                                    "parkour_flat": 0.,
+                                    "parkour_flat": 0.2,
                                     "parkour_step": 0.2,
                                     "parkour_gap": 0.2, 
-                                    "demo": 0.2}
+                                    "demo": 0.0}
     
     env_cfg.terrain.terrain_proportions = list(env_cfg.terrain.terrain_dict.values())
     env_cfg.terrain.curriculum = False
     env_cfg.terrain.max_difficulty = True
     
-    env_cfg.depth.angle = [0, 1]
     env_cfg.noise.add_noise = True
     env_cfg.domain_rand.randomize_friction = True
     env_cfg.domain_rand.push_robots = False
@@ -119,6 +118,10 @@ def play(args):
     env: LeggedRobot
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     obs = env.get_observations()
+
+    print(f"use camera is set to : {env.cfg.depth.use_camera}")
+
+    print(f"vx: {env.commands[env.lookat_id, 0].item()}")
 
     if args.web:
         web_viewer.setup(env)
@@ -197,10 +200,19 @@ def play(args):
                     depth_latent = None
                 
                 if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
-                    actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                    heights = torch.zeros((env_cfg.env.num_envs, 132), dtype=torch.float32, device=env.device)
+                    priv_latent = torch.zeros((env_cfg.env.num_envs, env_cfg.env.n_priv_latent), device=env.device)
+                    priv_explicit = torch.zeros((env_cfg.env.num_envs, env_cfg.env.n_priv), device=env.device)
+                    # print(f"obs buf shape {obs.shape}, heights: {heights}, priv expl shape: {priv_explicit.shape}, priv_lat_shape: {priv_latent.shape}, hist_buf_shape: {self.obs_history_buf.view(1, -1).shape}")
+
+                    new_obs = torch.cat([obs.detach()[:, :env_cfg.env.n_proprio], heights, priv_explicit, priv_latent, env.obs_history_buf.view(env_cfg.env.num_envs, -1)], dim=-1)
+
+                    # print(f"obs_history_buf size: {self.obs_history_buf.shape}")
+                    # print(f"obs buf size: {self.obs_buf.shape}")
+                    actions = ppo_runner.alg.depth_actor(new_obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
                 else:
                     if USE_THEIR_POLICY:
-                        actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                        actions = policy(obs, hist_encoding=True, scandots_latent=depth_latent)
                     else:
                         encoded_obs = algo_runner.encode_obs_phase1(obs, hist_encoding=True)
                         dists = policy(encoded_obs.detach())
