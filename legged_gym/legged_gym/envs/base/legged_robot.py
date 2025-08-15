@@ -166,7 +166,7 @@ class LeggedRobot(BaseTask):
     def process_depth_image(self, depth_image, env_id):
         # These operations are replicated on the hardware
         depth_image = self.crop_depth_image(depth_image)
-        depth_image += self.cfg.depth.dis_noise * (torch.rand(depth_image.shape, device=self.device)-0.5)
+        depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
         depth_image = torch.clip(depth_image, -self.cfg.depth.far_clip, -self.cfg.depth.near_clip)
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
         depth_image = self.normalize_depth_image(depth_image)
