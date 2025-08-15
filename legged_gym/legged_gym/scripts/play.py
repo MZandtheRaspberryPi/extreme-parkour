@@ -35,6 +35,7 @@ import code
 import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Logger
+from legged_gym.utils.helpers import get_args, update_cfg_from_args, class_to_dict
 from isaacgym import gymtorch, gymapi, gymutil
 import numpy as np
 import torch
@@ -69,6 +70,8 @@ def play(args):
     print(f"log_pth: {log_pth}")
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
+
+
     # override some parameters for testing
     if args.nodelay:
         env_cfg.domain_rand.action_delay_view = 0
@@ -126,6 +129,8 @@ def play(args):
     if USE_THEIR_POLICY:
         ppo_runner, train_cfg, log_pth = task_registry.make_alg_runner(log_root = log_pth, env=env, name=args.task, args=args, train_cfg=train_cfg, return_log_dir=True)
         
+        print(f"env cfg: \n{class_to_dict(env_cfg)}")
+        print(f"train_cfg: \n{class_to_dict(train_cfg)}")
         if args.use_jit:
             path = os.path.join(log_pth, "traced")
             model, checkpoint = get_load_path(root=path, checkpoint=args.checkpoint)
@@ -159,56 +164,59 @@ def play(args):
         estimator = algo_runner.estimator
         estimator.eval()
 
-    actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
-    infos = {}
-    infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
+    with torch.inference_mode():
+        actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
+        infos = {}
+        infos["depth"] = env.depth_buffer.clone().to(args.device)[:, -1] if ppo_runner.if_depth else None
 
-    for i in range(10*int(env.max_episode_length)):
-        if args.use_jit:
-            if env.cfg.depth.use_camera:
-                if infos["depth"] is not None:
-                    depth_latent = torch.ones((env_cfg.env.num_envs, 32), device=env.device)
-                    actions, depth_latent = policy_jit(obs.detach(), True, infos["depth"], depth_latent)
+        for i in range(10*int(env.max_episode_length)):
+            if args.use_jit:
+                if env.cfg.depth.use_camera:
+                    if infos["depth"] is not None:
+                        depth_latent = torch.ones((env_cfg.env.num_envs, 32), device=env.device)
+                        actions, depth_latent = policy_jit(obs.detach(), True, infos["depth"], depth_latent)
+                    else:
+                        depth_buffer = torch.ones((env_cfg.env.num_envs, 58, 87), device=env.device)
+                        actions, depth_latent = policy_jit(obs.detach(), False, depth_buffer, depth_latent)
                 else:
-                    depth_buffer = torch.ones((env_cfg.env.num_envs, 58, 87), device=env.device)
-                    actions, depth_latent = policy_jit(obs.detach(), False, depth_buffer, depth_latent)
+                    obs_jit = torch.cat((obs.detach()[:, :env_cfg.env.n_proprio+env_cfg.env.n_priv], obs.detach()[:, -env_cfg.env.history_len*env_cfg.env.n_proprio:]), dim=1)
+                    actions = policy(obs_jit)
             else:
-                obs_jit = torch.cat((obs.detach()[:, :env_cfg.env.n_proprio+env_cfg.env.n_priv], obs.detach()[:, -env_cfg.env.history_len*env_cfg.env.n_proprio:]), dim=1)
-                actions = policy(obs_jit)
-        else:
-            if env.cfg.depth.use_camera:
-                if infos["depth"] is not None:
-                    obs_student = obs[:, :env.cfg.env.n_proprio].clone()
-                    obs_student[:, 6:8] = 0
-                    depth_latent_and_yaw = depth_encoder(infos["depth"], obs_student)
-                    depth_latent = depth_latent_and_yaw[:, :-2]
-                    yaw = depth_latent_and_yaw[:, -2:]
-                obs[:, 6:8] = 1.5*yaw
-                    
-            else:
-                depth_latent = None
-            
-            if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
-                actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
-            else:
-                if USE_THEIR_POLICY:
-                    actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                if env.cfg.depth.use_camera:
+                    if infos["depth"] is not None:
+                        obs_student = obs[:, :env.cfg.env.n_proprio].clone()
+                        obs_student[:, 6:8] = 0
+                        print("depth info size")
+                        print(infos["depth"].shape)
+                        depth_latent_and_yaw = depth_encoder(infos["depth"], obs_student)
+                        depth_latent = depth_latent_and_yaw[:, :-2]
+                        yaw = depth_latent_and_yaw[:, -2:]
+                    obs[:, 6:8] = 1.5*yaw
+                        
                 else:
-                    encoded_obs = algo_runner.encode_obs_phase1(obs, hist_encoding=True)
-                    dists = policy(encoded_obs.detach())
-                    actions = dists.sample()
+                    depth_latent = None
+                
+                if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
+                    actions = ppo_runner.alg.depth_actor(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                else:
+                    if USE_THEIR_POLICY:
+                        actions = policy(obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
+                    else:
+                        encoded_obs = algo_runner.encode_obs_phase1(obs, hist_encoding=True)
+                        dists = policy(encoded_obs.detach())
+                        actions = dists.sample()
+                
+            obs, _, rews, dones, infos = env.step(actions.detach())
+            if args.web:
+                web_viewer.render(fetch_results=True,
+                            step_graphics=True,
+                            render_all_camera_sensors=True,
+                            wait_for_page_load=True)
+            print("time:", env.episode_length_buf[env.lookat_id].item() / 50, 
+                "cmd vx", env.commands[env.lookat_id, 0].item(),
+                "actual vx", env.base_lin_vel[env.lookat_id, 0].item(), )
             
-        obs, _, rews, dones, infos = env.step(actions.detach())
-        if args.web:
-            web_viewer.render(fetch_results=True,
-                        step_graphics=True,
-                        render_all_camera_sensors=True,
-                        wait_for_page_load=True)
-        print("time:", env.episode_length_buf[env.lookat_id].item() / 50, 
-              "cmd vx", env.commands[env.lookat_id, 0].item(),
-              "actual vx", env.base_lin_vel[env.lookat_id, 0].item(), )
-        
-        id = env.lookat_id
+            id = env.lookat_id
         
 
 if __name__ == '__main__':
