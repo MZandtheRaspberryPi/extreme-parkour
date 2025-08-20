@@ -20,7 +20,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
 
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0., 0., 0.5] # [m]
+        pos = [0., 0., 0.35] # [m]
         default_joint_angles = { # 12 joints in the order of simulation
             "FL_hip_joint": 0.1,
             "FL_thigh_joint": 0.7,

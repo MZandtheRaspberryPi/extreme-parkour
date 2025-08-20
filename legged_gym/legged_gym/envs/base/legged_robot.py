@@ -192,7 +192,40 @@ class LeggedRobot(BaseTask):
                                                                 self.cam_handles[i],
                                                                 gymapi.IMAGE_DEPTH)            
             depth_image = gymtorch.wrap_tensor(depth_image_)
+
+            # if i == self.lookat_id:
+            #     proc_img = depth_image.clone().detach().cpu().numpy()
+            #     debug_dict = {}
+            #     debug_dict["mean_depth_val"] = proc_img.mean()
+            #     debug_dict["median_depth_val"] = np.median(proc_img)
+            #     debug_dict["min_depth_val"] = proc_img.min()
+            #     debug_dict["max_depth_val"] = proc_img.max()
+            #     debug_dict["center_y_idx"] = proc_img.shape[0] // 2
+            #     debug_dict["center_x_idx"] = proc_img.shape[1] // 2
+            #     debug_dict["center_depth_val"] = proc_img[debug_dict["center_y_idx"], debug_dict["center_x_idx"]]
+            #     debug_dict["img_shape"] = proc_img.shape
+            #     debug_str = ""
+            #     for k, v in debug_dict.items():
+            #         debug_str += f"{k}: {v}\n"
+            #     print(f"raw img_stats: \n{debug_str}")
+
             depth_image = self.process_depth_image(depth_image, i)
+
+            # if i == self.lookat_id:
+            #     proc_img = depth_image.clone().detach().cpu().numpy()
+            #     debug_dict = {}
+            #     debug_dict["mean_depth_val"] = proc_img.mean()
+            #     debug_dict["median_depth_val"] = np.median(proc_img)
+            #     debug_dict["min_depth_val"] = proc_img.min()
+            #     debug_dict["max_depth_val"] = proc_img.max()
+            #     debug_dict["center_y_idx"] = proc_img.shape[0] // 2
+            #     debug_dict["center_x_idx"] = proc_img.shape[1] // 2
+            #     debug_dict["center_depth_val"] = proc_img[debug_dict["center_y_idx"], debug_dict["center_x_idx"]]
+            #     debug_dict["img_shape"] = proc_img.shape
+            #     debug_str = ""
+            #     for k, v in debug_dict.items():
+            #         debug_str += f"{k}: {v}\n"
+            #     print(f"processed img_stats: \n{debug_str}")
 
             init_flag = self.episode_length_buf <= 1
             if init_flag[i]:
@@ -945,7 +978,7 @@ class LeggedRobot(BaseTask):
         print(f"body names: {body_names}")
         print(f"feet_names names: {feet_names}")
 
-        for s in ["FR_foot", "FL_foot", "RL_foot", "RR_foot"]:
+        for s in feet_names:
             feet_idx = self.gym.find_asset_rigid_body_index(robot_asset, s)
             sensor_pose = gymapi.Transform(gymapi.Vec3(0.0, 0.0, 0.0))
             self.gym.create_asset_force_sensor(robot_asset, feet_idx, sensor_pose)

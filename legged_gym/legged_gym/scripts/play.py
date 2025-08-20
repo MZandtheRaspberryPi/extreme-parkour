@@ -177,6 +177,7 @@ def play(args):
                 if env.cfg.depth.use_camera:
                     if infos["depth"] is not None:
                         depth_latent = torch.ones((env_cfg.env.num_envs, 32), device=env.device)
+                        obs[:, 8:10] = 0.0
                         actions, depth_latent = policy_jit(obs.detach(), True, infos["depth"], depth_latent)
                     else:
                         depth_buffer = torch.ones((env_cfg.env.num_envs, 58, 87), device=env.device)
@@ -191,6 +192,7 @@ def play(args):
                         obs_student[:, 6:8] = 0
                         print("depth info size")
                         print(infos["depth"].shape)
+                        # depth_latent_and_yaw = depth_encoder(torch.zeros_like(infos["depth"]), obs_student)
                         depth_latent_and_yaw = depth_encoder(infos["depth"], obs_student)
                         depth_latent = depth_latent_and_yaw[:, :-2]
                         yaw = depth_latent_and_yaw[:, -2:]
@@ -198,7 +200,7 @@ def play(args):
                         
                 else:
                     depth_latent = None
-                
+
                 if USE_THEIR_POLICY and hasattr(ppo_runner.alg, "depth_actor"):
                     heights = torch.zeros((env_cfg.env.num_envs, 132), dtype=torch.float32, device=env.device)
                     priv_latent = torch.zeros((env_cfg.env.num_envs, env_cfg.env.n_priv_latent), device=env.device)
@@ -206,7 +208,6 @@ def play(args):
                     # print(f"obs buf shape {obs.shape}, heights: {heights}, priv expl shape: {priv_explicit.shape}, priv_lat_shape: {priv_latent.shape}, hist_buf_shape: {self.obs_history_buf.view(1, -1).shape}")
 
                     new_obs = torch.cat([obs.detach()[:, :env_cfg.env.n_proprio], heights, priv_explicit, priv_latent, env.obs_history_buf.view(env_cfg.env.num_envs, -1)], dim=-1)
-
                     # print(f"obs_history_buf size: {self.obs_history_buf.shape}")
                     # print(f"obs buf size: {self.obs_buf.shape}")
                     actions = ppo_runner.alg.depth_actor(new_obs.detach(), hist_encoding=True, scandots_latent=depth_latent)
