@@ -36,9 +36,11 @@ os.environ['VK_ICD_FILENAMES'] ='/usr/share/vulkan/icd.d/nvidia_icd.json'
 import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
+from legged_gym.utils.helpers import get_args, update_cfg_from_args, class_to_dict
 from shutil import copyfile
 import torch
 import wandb
+import yaml
 
 LOG_DIR = "/docker_mount/logs"
 
@@ -67,6 +69,18 @@ def train(args):
     env, env_cfg = task_registry.make_env(name=args.task, args=args)
     print("made env")
     ppo_runner, train_cfg = task_registry.make_alg_runner(log_root = log_pth, env=env, name=args.task, args=args)
+
+    env_cfg_dict = class_to_dict(env_cfg)
+    train_cfg_dict = class_to_dict(train_cfg)
+
+    with open(os.path.join(log_pth, "env_cfg.yaml"), "w") as file_handle:
+        yaml_str = yaml.dump(env_cfg_dict)
+        file_handle.write(yaml_str)
+
+    with open(os.path.join(log_pth, "train_cfg.yaml"), "w") as file_handle:
+        yaml_str = yaml.dump(train_cfg_dict)
+        file_handle.write(yaml_str)
+
     ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
 
 if __name__ == '__main__':
