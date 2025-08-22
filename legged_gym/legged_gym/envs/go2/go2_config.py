@@ -74,11 +74,11 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        position_min = [0.28, 0, 0.10]  # front camera
-        position_max = [0.32, 0, 0.14]  # front camera
+        position_min = [0.28, -0.05, 0.11]  # front camera
+        position_max = [0.32, 0.05, 0.16]  # front camera
         # degrees, euler
-        angle_min = [-1, 21.2, 0.0]
-        angle_max = [1, 24.6, 0.0]
+        angle_min = [-1, 21.2, -1.0]
+        angle_max = [1, 24.6, 1.0]
 
         update_interval = 5  # 5 works without retraining, 8 worse
 
