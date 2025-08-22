@@ -93,6 +93,18 @@ class Go2RoughCfg( LeggedRobotCfg ):
         
         scale = 1
         invert = True
+    
+    class noise:
+        add_noise = True
+        class noise_scales:
+            rotation = 0.2
+            dof_pos = 0.01
+            dof_vel = 1.5
+            ang_vel = 0.2
+            delta_yaw = 0.2
+        contact_filt_flip_prob = 0.1
+        global_steps_delay = 24 * 2000 # Go2RoughCfgPPO.runner.num_steps_per_env * 2000
+
 
     
 

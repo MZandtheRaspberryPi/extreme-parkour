@@ -104,6 +104,7 @@ class LeggedRobot(BaseTask):
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
         self._init_buffers()
         self._prepare_reward_function()
+        self._noise_vector = self._get_noise_scale_vec(self.cfg)
         self.init_done = True
         self.global_counter = 0
         self.total_env_steps_counter = 0
@@ -414,6 +415,37 @@ class LeggedRobot(BaseTask):
             self.rew_buf += rew
             self.episode_sums["termination"] += rew
     
+    def _get_noise_scale_vec(self, cfg):
+        noise_vec = torch.zeros_like(self.obs_buf[0][:self.cfg.env.n_proprio], requires_grad=False)
+
+        self.ang_vel_start_idx = 0
+        self.ang_vel_end_idx = 3
+
+        self.rotation_start_idx = 3
+        self.rotation_end_idx = 5
+
+        self.delta_yaw_start_idx = 6
+        self.delta_yaw_end_idx = 8
+        
+        self.dof_pos_start_idx = 13
+        self.dof_pos_end_idx = 25
+        self.dof_vel_start_idx = 25
+        self.dof_vel_end_idx = 37
+        
+        self.contact_filt_start_idx = 49
+        self.contact_filt_end_idx = 53
+
+        # ang vel
+        noise_vec[self.ang_vel_start_idx:self.ang_vel_end_idx] = self.cfg.noise.noise_scales.ang_vel
+        noise_vec[self.rotation_start_idx:self.rotation_end_idx] = self.cfg.noise.noise_scales.rotation
+        noise_vec[self.delta_yaw_start_idx:self.delta_yaw_end_idx] = self.cfg.noise.noise_scales.delta_yaw
+        noise_vec[self.dof_pos_start_idx:self.dof_pos_end_idx] = self.cfg.noise.noise_scales.dof_pos
+        noise_vec[self.dof_vel_start_idx:self.dof_vel_end_idx] = self.cfg.noise.noise_scales.dof_vel
+
+        return noise_vec
+
+
+
     def compute_observations(self):
         """ 
         Computes observations
@@ -423,7 +455,7 @@ class LeggedRobot(BaseTask):
             self.delta_yaw = self.target_yaw - self.yaw
             self.delta_next_yaw = self.next_target_yaw - self.yaw
         obs_buf = torch.cat((#skill_vector, 
-                            self.base_ang_vel  * self.obs_scales.ang_vel,   #[1,3]
+                            self.base_ang_vel,   #[1,3]
                             imu_obs,    #[1,2]
                             0*self.delta_yaw[:, None], 
                             self.delta_yaw[:, None],
@@ -432,11 +464,25 @@ class LeggedRobot(BaseTask):
                             self.commands[:, 0:1],  #[1,1]
                             (self.env_class != 17).float()[:, None], 
                             (self.env_class == 17).float()[:, None],
-                            self.reindex((self.dof_pos - self.default_dof_pos_all) * self.obs_scales.dof_pos),
-                            self.reindex(self.dof_vel * self.obs_scales.dof_vel),
+                            self.reindex((self.dof_pos - self.default_dof_pos_all)),
+                            self.reindex(self.dof_vel),
                             self.reindex(self.action_history_buf[:, -1]),
                             self.reindex_feet(self.contact_filt.float()-0.5),
                             ),dim=-1)
+        if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
+            obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
+            
+            flip_contacts = torch.rand(obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx].shape, device=self.device) < self.cfg.noise.contact_filt_flip_prob
+            contact_indices = obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] >= 0.49
+            non_contact_indices = obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] <= -0.49
+            obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] = torch.where(torch.logical_and(flip_contacts, contact_indices), -0.5, obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx])
+            obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] = torch.where(torch.logical_and(flip_contacts, non_contact_indices), 0.5, obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx])
+            
+        
+        obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
+        obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos
+        obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel
+
         priv_explicit = torch.cat((self.base_lin_vel * self.obs_scales.lin_vel,
                                    0 * self.base_lin_vel,
                                    0 * self.base_lin_vel), dim=-1)
