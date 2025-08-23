@@ -190,23 +190,6 @@ def play(args):
         estimator.eval()
 
     cur_time = 0.0
-    timestamps_states = []
-    joint_pos_arr = []
-    joint_vel_arr = []
-    joint_torque_arr = []
-    pos_cmds = []
-    pos_cmds_ours = []
-    for i in range(12):
-        joint_pos_arr.append([])
-        joint_vel_arr.append([])
-        joint_torque_arr.append([])
-        pos_cmds.append([])
-        pos_cmds_ours.append([])
-    contact_force_data = []
-    contact_data = []
-    for i in range(4):
-        contact_data.append([])
-        contact_force_data.append([])
 
     diffs_obs_proprio = []
     for i in range(env_cfg.env.n_proprio):
@@ -273,48 +256,46 @@ def play(args):
                         dists = policy(encoded_obs.detach())
                         actions = dists.sample()
 
-            dof_pos = env.dof_pos[env.lookat_id, :]
-            dof_vel = env.dof_vel[env.lookat_id, :]
-            computed_torques = env.torques[env.lookat_id, :]
-            contact_forces = torch.norm(env.contact_forces[env.lookat_id, env.feet_indices], dim=-1)
-            for i in range(4):
-                contact_force_data[i].append(contact_forces[i].detach().cpu().item())
-                contact_data[i].append(env.contact_filt[env.lookat_id, i].detach().cpu().item())
+            pos = env.dof_pos[env.lookat_id, :].detach().cpu().numpy()
+            vel = env.dof_vel[env.lookat_id, :].detach().cpu().numpy()
+            tau = env.torques[env.lookat_id, :].detach().cpu().numpy()
+            foot_force = torch.norm(env.contact_forces[env.lookat_id, env.feet_indices], dim=-1).detach().cpu().numpy()
+            contact_filt = env.contact_filt[env.lookat_id, :].detach().cpu().numpy()
+            rpy = np.array([env.roll[env.lookat_id].detach().cpu().item(), env.pitch[env.lookat_id].detach().cpu().item(), env.yaw[env.lookat_id].detach().cpu().item()], dtype=np.float32)
+            base_ang_vel = env.base_ang_vel[env.lookat_id].detach().cpu().numpy()
         
-            timestamps_states.append(cur_time)
-            actions_scaled = actions * env.cfg.control.action_scale
-            joint_pos_cmds = actions_scaled + env.default_dof_pos_all
-            joint_pos_cmd = joint_pos_cmds[env.lookat_id, :]
-            for sim_idx in range(12):
-                joint_pos = dof_pos[sim_idx].detach().cpu().item()
-                vel = dof_vel[sim_idx].detach().cpu().item()
-                tau_est = computed_torques[sim_idx].detach().cpu().item()
-                cmd = joint_pos_cmd[sim_idx].detach().cpu().item()
-
-                joint_pos_arr[sim_idx].append(joint_pos)
-                joint_vel_arr[sim_idx].append(vel)
-                joint_torque_arr[sim_idx].append(tau_est)
-                pos_cmds[sim_idx].append(cmd)
+            actions_scaled = actions[env.lookat_id, :] * env.cfg.control.action_scale
+            joint_pos_cmds = actions_scaled + env.default_dof_pos_all[env.lookat_id, :]
+            joint_pos_cmds = joint_pos_cmds.detach().cpu().numpy()
 
             contact_thresh = 2.0
             if infos["depth"] is not None:
                 depth_buf = infos["depth"][env.lookat_id].unsqueeze(0)
             print(f"our depth buf size: {depth_buf.shape}")
-            base_ang_vel = env.base_ang_vel[env.lookat_id].detach().cpu().numpy()
-            rpy = np.array([env.roll[env.lookat_id].detach().cpu().item(), env.pitch[env.lookat_id].detach().cpu().item(), env.yaw[env.lookat_id].detach().cpu().item()], dtype=np.float32)
-            pos = env.dof_pos[env.lookat_id, :].detach().cpu().numpy()
-            vel = env.dof_vel[env.lookat_id, :].detach().cpu().numpy()
-            tau = env.torques[env.lookat_id, :].detach().cpu().numpy()
-            foot_force = contact_forces.detach().cpu().numpy()
 
-            obs_ours, depth_latent_ours = rl_controller.arrs_to_obs(base_ang_vel, rpy, pos, vel, tau, foot_force, depth_buf, contact_thresh)
-            actions_ours = rl_controller.obs_latent_to_act(obs_ours, depth_latent_ours)
+
+            # now we put together the noisy obs, unscaling where nescessary...
+
+            ang_vel_noisy = obs[env.lookat_id, env.ang_vel_start_idx:env.ang_vel_end_idx].detach().cpu().numpy() / env.obs_scales.ang_vel
+            rpy_noisy = obs[env.lookat_id, env.rotation_start_idx:env.rotation_end_idx].detach().cpu().numpy()
+            pos_noisy = obs[env.lookat_id, env.dof_pos_start_idx:env.dof_pos_end_idx].detach().cpu().numpy() / env.obs_scales.dof_pos + env.default_dof_pos_all[env.lookat_id, :].detach().cpu().numpy()
+            vel_noisy = obs[env.lookat_id, env.dof_vel_start_idx:env.dof_vel_end_idx].detach().cpu().numpy() / env.obs_scales.dof_vel
+            contact_filt_noisy = obs[env.lookat_id, env.contact_filt_start_idx:env.contact_filt_end_idx].detach().cpu().numpy()
+
+            # self.delta_yaw_start_idx = 6
+            # self.delta_yaw_end_idx = 8
+
+
+            obs_ours, depth_latent_ours = rl_controller.arrs_to_obs(ang_vel_noisy, rpy_noisy, pos_noisy, vel_noisy, tau, foot_force, depth_buf, contact_thresh)
+            actions_ours = rl_controller.obs_latent_to_act(obs_ours, depth_latent_ours)[0]
             actions_ours_scaled = actions_ours * env.cfg.control.action_scale
-            joint_pos_cmds_ours = actions_ours_scaled + env.default_dof_pos_all
-            actions[env.lookat_id, :] = actions_ours[0]
-            for sim_idx in range(12):
-                cmd = joint_pos_cmds_ours[0][sim_idx].detach().cpu().item()
-                pos_cmds_ours[sim_idx].append(cmd)
+            joint_pos_cmds_ours = actions_ours_scaled + env.default_dof_pos_all[env.lookat_id]
+            joint_pos_cmds_ours = joint_pos_cmds_ours.detach().cpu().numpy()
+            actions[env.lookat_id, :] = actions_ours
+
+            rl_controller.log_proprio(0, cur_time, pos, vel, tau, foot_force, contact_filt, joint_pos_cmds, None, rpy, base_ang_vel)
+            rl_controller.log_proprio(1, None, pos_noisy, vel_noisy, None, None, contact_filt_noisy, None, joint_pos_cmds_ours, rpy_noisy, ang_vel_noisy)
+
 
             our_obs_proprio = obs_ours[0, :env_cfg.env.n_proprio]
             theirs_obs_proprio = new_obs[env.lookat_id, :env_cfg.env.n_proprio]
@@ -323,7 +304,7 @@ def play(args):
             for i in range(env_cfg.env.n_proprio):
                 diffs_obs_proprio[i].append(diffs[i].detach().cpu().item())
 
-            obs, _, rews, dones, infos = env.step(actions.detach())
+            obs, _, rews, dones, infos = env.step(actions.detach()) 
             if args.web:
                 web_viewer.render(fetch_results=True,
                             step_graphics=True,
@@ -337,47 +318,12 @@ def play(args):
                 break
             
             cur_time += env.dt
+
     os.makedirs("tmp", exist_ok=True)
     file_dir = f"tmp/sim_plots"
     os.makedirs(file_dir, exist_ok=True)
-    for sim_idx in range(12):
-        sim_name = env.dof_names[sim_idx]
-        fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 8))
 
-        axes[0].plot(timestamps_states, joint_pos_arr[sim_idx], label=f"{sim_name}_pos")
-        axes[0].plot(timestamps_states, pos_cmds_ours[sim_idx], linestyle='dashed', label=f"{sim_name}_pos_cmd_ours")
-        axes[0].plot(timestamps_states, pos_cmds[sim_idx], linestyle='dashed', label=f"{sim_name}_pos_cmd_env")
-
-        # axes[0].plot(tracked_data[:, 0], default_pos_targ + tracked_data[:, 4]  * action_scale, linestyle='dashed', label=f"{target_joint_name}_goal_pos")
-        axes[0].set_ylabel("pos")
-        axes[0].legend(loc='lower left')
-        axes[1].plot(timestamps_states, joint_vel_arr[sim_idx], label=f"{sim_name}_vel")
-        axes[1].set_ylabel("vel")
-        axes[1].legend(loc='lower left')
-        axes[2].plot(timestamps_states, joint_torque_arr[sim_idx], label=f"{sim_name}_torque")
-        axes[2].set_ylabel("torque")
-        axes[2].legend(loc='lower left')
-        # axes[3].plot(timestamps_states, tracked_data[:, 4] * action_scale, label=f"{sim_name}_pos_diff")
-        # axes[3].set_ylabel("pos_diff")
-        # axes[3].legend(loc='lower left')
-        # axes[3].set_xlabel("time")
-
-        fig.savefig(os.path.join(file_dir, f"sim_joint_traj_{sim_name}.png"))
-        plt.close(fig)
-
-    fig, axes = plt.subplots(2, 4, sharex=True, figsize=(10, 14))
-
-    for i in range(4):
-        axes[0][i].plot(timestamps_states, contact_force_data[i], label=f"contact_force_{i}")
-        axes[1][i].plot(timestamps_states, contact_data[i], label=f"contact_{i}")
-        axes[1][i].set_xlabel("time")
-        axes[0][i].set_ylabel("contact_force")
-        axes[1][i].set_ylabel("contact_bool")
-    
-
-    fig.savefig(os.path.join(file_dir, f"sim_contact_plots.png"))
-
-    plt.close(fig)
+    rl_controller.make_log_plots(file_dir, "sim", only_noisy=False)
 
     diffs_obs_arr = np.array(diffs_obs_proprio)
     sum_abs_diffs = np.sum(np.abs(diffs_obs_arr), axis=1)
@@ -390,7 +336,7 @@ def play(args):
         label=None
         if i in top_indices:
             label=f"{i}"
-        ax.plot(timestamps_states, diffs_obs_proprio[i], label=label)
+        ax.plot(rl_controller.timestamps_states, diffs_obs_proprio[i], label=label)
     ax.set_xlabel("time")
     ax.set_ylabel("obs_diffs")
     ax.legend()
