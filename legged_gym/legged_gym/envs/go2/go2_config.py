@@ -18,9 +18,11 @@ go2_const_dof_range = dict(
 
 class Go2RoughCfg( LeggedRobotCfg ):
 
+    class debug:
+        render_vis = True
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0., 0., 0.35] # [m]
+        pos = [0., 0., 0.4] # [m]
         default_joint_angles = { # 12 joints in the order of simulation
             "FL_hip_joint": 0.1,
             "FL_thigh_joint": 0.7,

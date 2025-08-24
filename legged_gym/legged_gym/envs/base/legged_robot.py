@@ -395,6 +395,10 @@ class LeggedRobot(BaseTask):
         if self.cfg.env.send_timeouts:
             self.extras["time_outs"] = self.time_out_buf
         
+        # feet buffer
+
+        self.feet_air_time[env_ids] = 0.
+        
     def compute_reward(self):
         """ Compute rewards
             Calls each reward function which had a non-zero scale (processed in self._prepare_reward_function())
@@ -458,10 +462,11 @@ class LeggedRobot(BaseTask):
                             self.base_ang_vel,   #[1,3]
                             imu_obs,    #[1,2]
                             0*self.delta_yaw[:, None], 
-                            self.delta_yaw[:, None],
-                            self.delta_next_yaw[:, None],
-                            0*self.commands[:, 0:2], 
-                            self.commands[:, 0:1],  #[1,1]
+                            0*self.delta_yaw[:, None],
+                            0*self.delta_next_yaw[:, None],
+                            # 0*self.commands[:, 0:2], 
+                            # self.commands[:, 0:1],  #[1,1]
+                            self.commands[:, 0:3], 
                             (self.env_class != 17).float()[:, None], 
                             (self.env_class == 17).float()[:, None],
                             self.reindex((self.dof_pos - self.default_dof_pos_all)),
@@ -826,6 +831,7 @@ class LeggedRobot(BaseTask):
         self.contact_buf = torch.zeros(self.num_envs, self.cfg.env.contact_buf_len, 4, device=self.device, dtype=torch.float)
 
         self.commands = torch.zeros(self.num_envs, self.cfg.commands.num_commands, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel, heading
+        self.feet_air_time = torch.zeros(self.num_envs, self.feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self._resample_commands(torch.arange(self.num_envs, device=self.device, requires_grad=False))
         self.commands_scale = torch.tensor([self.obs_scales.lin_vel, self.obs_scales.lin_vel, self.obs_scales.ang_vel], device=self.device, requires_grad=False,) # TODO change this
         self.feet_air_time = torch.zeros(self.num_envs, self.feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
@@ -1324,13 +1330,26 @@ class LeggedRobot(BaseTask):
         rew = torch.minimum(torch.sum(target_vec_norm * cur_vel, dim=-1), self.commands[:, 0]) / (self.commands[:, 0] + 1e-5)
         return rew
 
+    def _reward_tracking_lin_vel(self):
+        # Tracking of linear velocity commands (xy axes)
+        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+
+    def _reward_ang_vel_xy_tracking(self):
+        # Tracking of angular velocity commands (yaw) 
+        ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
+        return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma)
+
+    def _reward_lin_vel_y(self):
+        rew = torch.square(self.base_lin_vel[:, 1])
+        return rew
+
     def _reward_tracking_yaw(self):
         rew = torch.exp(-torch.abs(self.target_yaw - self.yaw))
         return rew
     
     def _reward_lin_vel_z(self):
         rew = torch.square(self.base_lin_vel[:, 2])
-        rew[self.env_class != 17] *= 0.5
         return rew
     
     def _reward_ang_vel_xy(self):
@@ -1378,3 +1397,13 @@ class LeggedRobot(BaseTask):
         self.feet_at_edge = self.contact_filt & feet_at_edge
         rew = (self.terrain_levels > 3) * torch.sum(self.feet_at_edge, dim=-1)
         return rew
+
+    def _reward_feet_air_time(self):
+        # Reward long steps
+        # Need to filter the contacts because the contact reporting of PhysX is unreliable on meshes
+        first_contact = (self.feet_air_time > 0.) * self.contact_filt
+        self.feet_air_time += self.dt
+        rew_airTime = torch.sum((self.feet_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
+        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        self.feet_air_time *= ~self.contact_filt
+        return rew_airTime
