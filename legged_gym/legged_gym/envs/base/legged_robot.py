@@ -1407,3 +1407,9 @@ class LeggedRobot(BaseTask):
         rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
         self.feet_air_time *= ~self.contact_filt
         return rew_airTime
+
+    def _reward_stand_still(self):
+        # Penalize motion at zero commands
+        return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) \
+            * (torch.norm(self.commands[:, :2], dim=1) < 0.1) \
+            * (torch.abs(self.commands[:, 2] < 0.2))

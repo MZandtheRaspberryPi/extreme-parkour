@@ -22,7 +22,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         render_vis = True
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0., 0., 0.4] # [m]
+        pos = [0., 0., 0.5] # [m]
         default_joint_angles = { # 12 joints in the order of simulation
             "FL_hip_joint": 0.1,
             "FL_thigh_joint": 0.7,
@@ -63,9 +63,16 @@ class Go2RoughCfg( LeggedRobotCfg ):
         dof_velocity_override = 35.
   
     class rewards( LeggedRobotCfg.rewards ):
+        # class scales(LeggedRobotCfg.rewards.scales):
+        #     exceed_dof_pos_limits = -0.4
+        #     exceed_torque_limits_l1norm = -0.4
+        #     dof_vel_limits = -0.4
+        only_positive_rewards = False
+        soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9
-        base_height_target = 1.0
+        soft_torque_limit = 0.9
         max_contact_force = 100
+        base_height_target = 1.
         # class scales( LeggedRobotCfg.rewards.scales ):
             # torques = -0.0002
             # dof_pos_limits = -10.0
