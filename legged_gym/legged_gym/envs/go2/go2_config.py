@@ -61,12 +61,59 @@ class Go2RoughCfg( LeggedRobotCfg ):
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         sdk_dof_range = go2_const_dof_range
         dof_velocity_override = 35.
+
+        joint_limits_low = { # 12 joints in the order of simulation
+            "FL_hip_joint": -1.0472,
+            "FL_thigh_joint": -1.5708,
+            "FL_calf_joint": -2.7227,
+            "FR_hip_joint": -1.0472,
+            "FR_thigh_joint": -1.5708,
+            "FR_calf_joint": -2.7227,
+            "RL_hip_joint": -1.0472,
+            "RL_thigh_joint": -0.5236,
+            "RL_calf_joint": -2.7227,
+            "RR_hip_joint": -1.0472,
+            "RR_thigh_joint": -0.5236,
+            "RR_calf_joint": -2.7227,
+        }
+
+        joint_limits_high = { # 12 joints in the order of simulation
+            "FL_hip_joint": 1.0472,
+            "FL_thigh_joint": 3.4907,
+            "FL_calf_joint": -0.83776,
+            "FR_hip_joint": 1.0472,
+            "FR_thigh_joint": 3.4907,
+            "FR_calf_joint": -0.83776,
+            "RL_hip_joint": 1.0472,
+            "RL_thigh_joint": 4.5379,
+            "RL_calf_joint": -0.83776,
+            "RR_hip_joint": 1.0472,
+            "RR_thigh_joint": 4.5379,
+            "RR_calf_joint": -0.83776,
+        }
+
+        torque_limits = {
+            "FL_hip_joint": 25,
+            "FL_thigh_joint": 40,
+            "FL_calf_joint": 40,
+            "FR_hip_joint": 25,
+            "FR_thigh_joint": 40,
+            "FR_calf_joint": 40,
+            "RL_hip_joint": 25,
+            "RL_thigh_joint": 40,
+            "RL_calf_joint": 40,
+            "RR_hip_joint": 25,
+            "RR_thigh_joint": 40,
+            "RR_calf_joint": 40,
+            
+        }
+
   
     class rewards( LeggedRobotCfg.rewards ):
-        # class scales(LeggedRobotCfg.rewards.scales):
-        #     exceed_dof_pos_limits = -0.4
-        #     exceed_torque_limits_l1norm = -0.4
-        #     dof_vel_limits = -0.4
+        class scales(LeggedRobotCfg.rewards.scales):
+            exceed_dof_pos_limits = -0.4
+            exceed_torque_limits_l1norm = -0.4
+            dof_vel_limits = -0.4
         only_positive_rewards = False
         soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9

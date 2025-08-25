@@ -875,6 +875,20 @@ class LeggedRobot(BaseTask):
                                             self.cfg.depth.resized[1], 
                                             self.cfg.depth.resized[0]).to(self.device)
 
+        self.dof_pos_limits_cfg = torch.zeros(self.num_dof, 2, dtype=torch.float32, device=self.device, requires_grad=False)
+        self.torque_limits_cfg = torch.zeros(self.num_dof, dtype=torch.float32, device=self.device, requires_grad=False)
+
+        for i in range(len(self.dof_names)):
+            dof_name = self.dof_names[i]
+            low_lim = self.cfg.asset.joint_limits_low[dof_name]
+            high_lim = self.cfg.asset.joint_limits_high[dof_name]
+            torque_lim = self.cfg.asset.torque_limits[dof_name]
+
+            self.dof_pos_limits_cfg[i, 0] = low_lim
+            self.dof_pos_limits_cfg[i, 1] = high_lim
+            self.torque_limits_cfg[i] = torque_lim
+
+
     def _prepare_reward_function(self):
         """ Prepares a list of reward functions, whcih will be called to compute the total reward.
             Looks for self._reward_<REWARD_NAME>, where <REWARD_NAME> are names of all non zero reward scales in the cfg.
@@ -1413,3 +1427,22 @@ class LeggedRobot(BaseTask):
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) \
             * (torch.norm(self.commands[:, :2], dim=1) < 0.1) \
             * (torch.abs(self.commands[:, 2] < 0.2))
+
+    def _reward_exceed_dof_pos_limits(self):
+        below_low = self.dof_pos < self.dof_pos_limits_cfg[:, 0]
+        above_high = self.dof_pos > self.dof_pos_limits_cfg[:, 1]
+        out_of_pos_lim = torch.logical_or(below_low, above_high)
+        out_of_pos_lim = torch.sum(out_of_pos_lim.to(torch.float32), dim = 1)
+        return out_of_pos_lim
+
+    def _reward_exceed_torque_limits_l1norm(self):
+        """ square function for exceeding part """
+        exceeded_torques = torch.abs(self.torques) - self.torque_limits_cfg
+        exceeded_torques[exceeded_torques < 0.] = 0.
+        # sum along decimation axis and dof axis
+        return torch.linalg.norm(exceeded_torques, dim=1, ord=1)
+
+    def _reward_dof_vel_limits(self):
+        # Penalize dof velocities too close to the limit
+        # clip to max error = 1 rad/s per joint to avoid huge penalties
+        return torch.sum((torch.abs(self.dof_vel) - self.dof_vel_limits*self.cfg.rewards.soft_dof_vel_limit).clip(min=0., max=1.), dim=1)
