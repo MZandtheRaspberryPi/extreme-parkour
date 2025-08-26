@@ -134,7 +134,7 @@ class LeggedRobotCfg(BaseConfig):
             height_measurements = 0.02
 
     class terrain:
-        mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
+        mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
         hf2mesh_method = "grid"  # grid or fast
         max_error = 0.1 # for fast
         max_error_camera = 2
@@ -298,14 +298,14 @@ class LeggedRobotCfg(BaseConfig):
             # tracking_goal_vel = 1.5
             # tracking_yaw = 0.5
             # regularization rewards
-            lin_vel_z = -2.0
+            lin_vel_z = -1.0
             # ang_vel_xy = -0.05
             tracking_lin_vel = 1.0
             ang_vel_xy_tracking = 1.0
             ang_vel_xy = -0.05
             stand_still = -2
             # lin_vel_y = -0.5
-            # orientation = -1.
+            orientation = -1.
             dof_acc = -2.5e-7
             collision = -1.
             action_rate = -0.01
@@ -325,10 +325,6 @@ class LeggedRobotCfg(BaseConfig):
         soft_torque_limit = 0.4
         base_height_target = 1.
         max_contact_force = 40. # forces above this value are penalized
-
-
-
-
 
     # viewer camera:
     class viewer:
@@ -354,6 +350,10 @@ class LeggedRobotCfg(BaseConfig):
             max_gpu_contact_pairs = 2**23 #2**24 -> needed for 8000 envs and more
             default_buffer_size_multiplier = 5
             contact_collection = 2 # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
+            max_gpu_contact_pairs: 1048576 # 1024*1024
+            gpu_total_aggregate_pairs_capacity = 2048
+            # https://docs.robotsfan.com/isaacgym/api/python/struct_py.html#isaacgym.gymapi.PhysXParams
+
 
 class LeggedRobotCfgPPO(BaseConfig):
     seed = 1

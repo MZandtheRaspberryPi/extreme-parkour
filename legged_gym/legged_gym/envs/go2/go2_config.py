@@ -105,14 +105,13 @@ class Go2RoughCfg( LeggedRobotCfg ):
             "RR_hip_joint": 25,
             "RR_thigh_joint": 40,
             "RR_calf_joint": 40,
-            
         }
 
   
     class rewards( LeggedRobotCfg.rewards ):
         class scales(LeggedRobotCfg.rewards.scales):
             exceed_dof_pos_limits = -0.4
-            exceed_torque_limits_l1norm = -0.4
+            # exceed_torque_limits_l1norm = -0.4
             dof_vel_limits = -0.4
         only_positive_rewards = False
         soft_dof_vel_limit = 0.9

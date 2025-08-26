@@ -282,7 +282,8 @@ class LeggedRobot(BaseTask):
         self.last_contacts = contact
         
         # self._update_jump_schedule()
-        self._update_goals()
+        if self.cfg.terrain.curriculum:
+            self._update_goals()
         self._post_physics_step_callback()
 
         # compute observations, rewards, resets, ...
@@ -291,8 +292,9 @@ class LeggedRobot(BaseTask):
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         self.reset_idx(env_ids)
 
-        self.cur_goals = self._gather_cur_goals()
-        self.next_goals = self._gather_cur_goals(future=1)
+        if self.cfg.terrain.curriculum:
+            self.cur_goals = self._gather_cur_goals()
+            self.next_goals = self._gather_cur_goals(future=1)
 
         self.update_depth_buffer()
 
@@ -328,11 +330,12 @@ class LeggedRobot(BaseTask):
         self.reset_buf = torch.zeros((self.num_envs, ), dtype=torch.bool, device=self.device)
         roll_cutoff = torch.abs(self.roll) > 1.5
         pitch_cutoff = torch.abs(self.pitch) > 1.5
-        reach_goal_cutoff = self.cur_goal_idx >= self.cfg.terrain.num_goals
         height_cutoff = self.root_states[:, 2] < -0.25
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
-        self.time_out_buf |= reach_goal_cutoff
+        if self.cfg.terrain.curriculum:
+            reach_goal_cutoff = self.cur_goal_idx >= self.cfg.terrain.num_goals
+            self.time_out_buf |= reach_goal_cutoff
 
         self.reset_buf |= self.time_out_buf
         self.reset_buf |= roll_cutoff
@@ -376,7 +379,8 @@ class LeggedRobot(BaseTask):
         self.obs_history_buf[env_ids, :, :] = 0.  # reset obs history buffer TODO no 0s
         self.contact_buf[env_ids, :, :] = 0.
         self.action_history_buf[env_ids, :, :] = 0.
-        self.cur_goal_idx[env_ids] = 0
+        if self.cfg.terrain.curriculum:
+            self.cur_goal_idx[env_ids] = 0
         self.reach_goal_timer[env_ids] = 0
 
         # fill extras
@@ -456,8 +460,18 @@ class LeggedRobot(BaseTask):
         """
         imu_obs = torch.stack((self.roll, self.pitch), dim=1)
         if self.global_counter % 5 == 0:
-            self.delta_yaw = self.target_yaw - self.yaw
-            self.delta_next_yaw = self.next_target_yaw - self.yaw
+            if self.cfg.terrain.curriculum:
+                self.delta_yaw = self.target_yaw - self.yaw
+                self.delta_next_yaw = self.next_target_yaw - self.yaw
+            else:
+                self.delta_yaw = torch.zeros_like(self.yaw)
+                self.delta_next_yaw = torch.zeros_like(self.yaw)
+        if self.cfg.terrain.curriculum:
+            env_clas_neq_17 = (self.env_class != 17).float()[:, None]
+            env_class_eq_17 = (self.env_class == 17).float()[:, None]
+        else:
+            env_clas_neq_17 = torch.zeros_like(self.yaw)[:, None]
+            env_class_eq_17 = torch.zeros_like(self.yaw)[:, None]
         obs_buf = torch.cat((#skill_vector, 
                             self.base_ang_vel,   #[1,3]
                             imu_obs,    #[1,2]
@@ -467,8 +481,8 @@ class LeggedRobot(BaseTask):
                             # 0*self.commands[:, 0:2], 
                             # self.commands[:, 0:1],  #[1,1]
                             self.commands[:, 0:3], 
-                            (self.env_class != 17).float()[:, None], 
-                            (self.env_class == 17).float()[:, None],
+                            env_clas_neq_17, 
+                            env_class_eq_17,
                             self.reindex((self.dof_pos - self.default_dof_pos_all)),
                             self.reindex(self.dof_vel),
                             self.reindex(self.action_history_buf[:, -1]),
@@ -831,7 +845,6 @@ class LeggedRobot(BaseTask):
         self.contact_buf = torch.zeros(self.num_envs, self.cfg.env.contact_buf_len, 4, device=self.device, dtype=torch.float)
 
         self.commands = torch.zeros(self.num_envs, self.cfg.commands.num_commands, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel, heading
-        self.feet_air_time = torch.zeros(self.num_envs, self.feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self._resample_commands(torch.arange(self.num_envs, device=self.device, requires_grad=False))
         self.commands_scale = torch.tensor([self.obs_scales.lin_vel, self.obs_scales.lin_vel, self.obs_scales.ang_vel], device=self.device, requires_grad=False,) # TODO change this
         self.feet_air_time = torch.zeros(self.num_envs, self.feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
@@ -1371,7 +1384,8 @@ class LeggedRobot(BaseTask):
      
     def _reward_orientation(self):
         rew = torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
-        rew[self.env_class != 17] = 0.
+        if self.cfg.terrain.curriculum:
+            rew[self.env_class != 17] = 0.
         return rew
 
     def _reward_dof_acc(self):
