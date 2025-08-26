@@ -501,7 +501,7 @@ class OnPolicyRunner:
     def load(self, path, load_optimizer=True):
         print("*" * 80)
         print("Loading model from {}...".format(path))
-        loaded_dict = torch.load(path, map_location=self.device)
+        loaded_dict = torch.load(path, map_location=self.device, weights_only=False)
         self.alg.actor_critic.load_state_dict(loaded_dict['model_state_dict'])
         self.alg.estimator.load_state_dict(loaded_dict['estimator_state_dict'])
         if self.if_depth:
