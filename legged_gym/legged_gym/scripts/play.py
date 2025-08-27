@@ -201,7 +201,8 @@ def play(args):
     print(f"clip_actions: {env.cfg.normalization.clip_actions}")
     print(f"dof_pos scale: {env.obs_scales.dof_pos} dof_vel scale: {env.obs_scales.dof_vel}")
 
-    rl_controller = RobotRLController("cuda:0")
+    use_ours = True
+    rl_controller = RobotRLController("cuda:0", use_ours=use_ours)
 
     with torch.inference_mode():
         actions = torch.zeros(env.num_envs, 12, device=env.device, requires_grad=False)
