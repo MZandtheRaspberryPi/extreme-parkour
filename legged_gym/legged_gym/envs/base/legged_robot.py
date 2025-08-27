@@ -472,6 +472,7 @@ class LeggedRobot(BaseTask):
         else:
             env_clas_neq_17 = torch.zeros_like(self.yaw)[:, None]
             env_class_eq_17 = torch.zeros_like(self.yaw)[:, None]
+        # 7,8,10
         obs_buf = torch.cat((#skill_vector, 
                             self.base_ang_vel,   #[1,3]
                             imu_obs,    #[1,2]
@@ -481,8 +482,8 @@ class LeggedRobot(BaseTask):
                             # 0*self.commands[:, 0:2], 
                             # self.commands[:, 0:1],  #[1,1]
                             self.commands[:, 0:3], 
-                            env_clas_neq_17, 
-                            env_class_eq_17,
+                            0.0 * env_clas_neq_17, 
+                            0.0 * env_class_eq_17,
                             self.reindex((self.dof_pos - self.default_dof_pos_all)),
                             self.reindex(self.dof_vel),
                             self.reindex(self.action_history_buf[:, -1]),

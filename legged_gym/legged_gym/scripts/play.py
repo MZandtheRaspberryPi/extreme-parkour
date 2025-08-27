@@ -272,7 +272,9 @@ def play(args):
             contact_thresh = 2.0
             if infos["depth"] is not None:
                 depth_buf = infos["depth"][env.lookat_id].unsqueeze(0)
-            print(f"our depth buf size: {depth_buf.shape}")
+                print(f"our depth buf size: {depth_buf.shape}")
+            else:
+                depth_buf = None
 
 
             # now we put together the noisy obs, unscaling where nescessary...
@@ -286,7 +288,8 @@ def play(args):
             # self.delta_yaw_start_idx = 6
             # self.delta_yaw_end_idx = 8
 
-
+            commands_ours = env.commands[env.lookat_id, 0:3].detach().cpu().numpy()
+            rl_controller.commands = commands_ours
             obs_ours, depth_latent_ours = rl_controller.arrs_to_obs(ang_vel_noisy, rpy_noisy, pos_noisy, vel_noisy, tau, foot_force, depth_buf, contact_thresh)
             actions_ours = rl_controller.obs_latent_to_act(obs_ours, depth_latent_ours)[0]
             actions_ours_scaled = actions_ours * env.cfg.control.action_scale

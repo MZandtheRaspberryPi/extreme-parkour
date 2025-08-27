@@ -151,7 +151,7 @@ class LeggedRobotCfg(BaseConfig):
         gap_size = [0.02, 0.1]
         stepping_stone_distance = [0.02, 0.08]
         downsampled_scale = 0.075
-        curriculum = True
+        curriculum = False
 
         all_vertical = False
         no_flat = True
@@ -309,7 +309,7 @@ class LeggedRobotCfg(BaseConfig):
             orientation = -1.
             dof_acc = -2.5e-7
             collision = -1.
-            action_rate = -0.3
+            action_rate = -0.2
             delta_torques = -1.0e-7
             torques = -0.00001
             hip_pos = -1.0
