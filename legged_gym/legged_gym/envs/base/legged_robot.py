@@ -308,7 +308,8 @@ class LeggedRobot(BaseTask):
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self.gym.clear_lines(self.viewer)
             # self._draw_height_samples()
-            self._draw_goals()
+            if self.cfg.terrain.curriculum:
+                self._draw_goals()
             self._draw_feet()
             if self.cfg.depth.use_camera:
                 window_name = "Depth Image"
@@ -489,6 +490,8 @@ class LeggedRobot(BaseTask):
                             self.reindex(self.action_history_buf[:, -1]),
                             self.reindex_feet(self.contact_filt.float()-0.5),
                             ),dim=-1)
+
+    
         if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
             obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
             
@@ -497,7 +500,6 @@ class LeggedRobot(BaseTask):
             non_contact_indices = obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] <= -0.49
             obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] = torch.where(torch.logical_and(flip_contacts, contact_indices), -0.5, obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx])
             obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx] = torch.where(torch.logical_and(flip_contacts, non_contact_indices), 0.5, obs_buf[:, self.contact_filt_start_idx:self.contact_filt_end_idx])
-            
         
         obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
         obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos

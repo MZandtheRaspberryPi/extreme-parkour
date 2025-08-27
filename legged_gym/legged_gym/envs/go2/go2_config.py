@@ -156,7 +156,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
             dof_pos = 0.01
             dof_vel = 1.5
             ang_vel = 0.2
-            delta_yaw = 0.05
+            delta_yaw = 0.00
         contact_filt_flip_prob = 0.1
         global_steps_delay = 0 # 24*280*50 # Go2RoughCfgPPO.runner.num_steps_per_env * 2000
 
