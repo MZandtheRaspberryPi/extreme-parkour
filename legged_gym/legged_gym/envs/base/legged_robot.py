@@ -475,20 +475,20 @@ class LeggedRobot(BaseTask):
             env_class_eq_17 = torch.zeros_like(self.yaw)[:, None]
         # 7,8,10
         obs_buf = torch.cat((#skill_vector, 
-                            self.base_ang_vel,   #[1,3]
-                            imu_obs,    #[1,2]
-                            0*self.delta_yaw[:, None], 
-                            0*self.delta_yaw[:, None],
-                            0*self.delta_next_yaw[:, None],
+                            self.base_ang_vel,   #[1,3] 0, 1, 2
+                            imu_obs,    #[1,2] 3, 4
+                            0*self.delta_yaw[:, None], # 5
+                            0*self.delta_yaw[:, None], # 6
+                            0*self.delta_next_yaw[:, None], # 7
                             # 0*self.commands[:, 0:2], 
                             # self.commands[:, 0:1],  #[1,1]
-                            self.commands[:, 0:3], 
-                            0.0 * env_clas_neq_17, 
-                            0.0 * env_class_eq_17,
-                            self.reindex((self.dof_pos - self.default_dof_pos_all)),
-                            self.reindex(self.dof_vel),
-                            self.reindex(self.action_history_buf[:, -1]),
-                            self.reindex_feet(self.contact_filt.float()-0.5),
+                            self.commands[:, 0:3], # 8, 9, 10
+                            0.0 * env_clas_neq_17, # 10
+                            0.0 * env_class_eq_17, # 11
+                            self.reindex((self.dof_pos - self.default_dof_pos_all)), # 12-23 inclusive
+                            self.reindex(self.dof_vel), # 24 - 35 inclusive
+                            self.reindex(self.action_history_buf[:, -1]), # 36 - 48 inclusive
+                            self.reindex_feet(self.contact_filt.float()-0.5), # 49 - 53 inclusive
                             ),dim=-1)
 
     

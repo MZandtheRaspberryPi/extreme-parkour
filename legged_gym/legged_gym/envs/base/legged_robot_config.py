@@ -55,14 +55,8 @@ class LeggedRobotCfg(BaseConfig):
         send_timeouts = True # send time out information to the algorithm
         episode_length_s = 20 # episode length in seconds
         obs_type = "og"
-
-
-        
-        
-        
         history_encoding = True
         reorder_dofs = True
-        
         
         # action_delay_range = [0, 5]
 
@@ -208,7 +202,7 @@ class LeggedRobotCfg(BaseConfig):
         heading_command = False # if true: compute ang vel command from heading error
         
         lin_vel_clip = 0.1
-        ang_vel_clip = 0.2
+        ang_vel_clip = 0.4
         # Easy ranges
         class ranges:
             lin_vel_x = [0., 1.5] # min max [m/s]
@@ -309,7 +303,7 @@ class LeggedRobotCfg(BaseConfig):
             orientation = -1.
             dof_acc = -2.5e-7
             collision = -1.
-            action_rate = -0.2
+            action_rate = -0.1
             delta_torques = -1.0e-7
             torques = -0.00001
             hip_pos = -1.0
