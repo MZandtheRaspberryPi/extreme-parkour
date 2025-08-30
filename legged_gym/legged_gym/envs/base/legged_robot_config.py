@@ -201,7 +201,7 @@ class LeggedRobotCfg(BaseConfig):
         resampling_time = 6. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         
-        lin_vel_clip = 0.1
+        lin_vel_clip = 0.2
         ang_vel_clip = 0.4
         # Easy ranges
         class ranges:
@@ -212,9 +212,9 @@ class LeggedRobotCfg(BaseConfig):
 
         # Easy ranges
         class max_ranges:
-            lin_vel_x = [0.0, 0.5] # min max [m/s]
+            lin_vel_x = [0.3, 0.5] # min max [m/s]
             lin_vel_y = [0.0, 0.0]#[0.15, 0.6]   # min max [m/s]
-            ang_vel_yaw = [-1, 1]    # min max [rad/s]
+            ang_vel_yaw = [0.0, 0.0]    # min max [rad/s]
             heading = [-1.6, 1.6]
 
         class crclm_incremnt:
@@ -293,27 +293,27 @@ class LeggedRobotCfg(BaseConfig):
             # tracking_goal_vel = 1.5
             # tracking_yaw = 0.5
             # regularization rewards
-            # lin_vel_z = -1.0
+            lin_vel_z = -1.0
             # ang_vel_xy = -0.05
-            tracking_lin_vel = 1.0
-            ang_vel_xy_tracking = 1.0
+            tracking_lin_vel = 1.5
+            ang_vel_xy_tracking = 0.5
             ang_vel_xy = -0.05
-            stand_still = -2
+            # stand_still = -2
             # lin_vel_y = -0.5
             orientation = -1.
             dof_acc = -2.5e-7
-            collision = -1.
+            collision = -10.
             action_rate = -0.1
             delta_torques = -1.0e-7
             torques = -0.00001
-            hip_pos = -1.0
-            dof_error = -0.01
-            # feet_stumble = -1
+            hip_pos = -0.5
+            dof_error = -0.04
+            feet_stumble = -1
             # feet_edge = -1
-            feet_air_time = 1.0
+            # feet_air_time = 1.0
             
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
-        tracking_sigma = 0.25 # tracking reward = exp(-error^2/sigma)
+        tracking_sigma = 0.2 # tracking reward = exp(-error^2/sigma)
         
         soft_dof_pos_limit = 1. # percentage of urdf limits, values above this limit are penalized
         soft_dof_vel_limit = 1
