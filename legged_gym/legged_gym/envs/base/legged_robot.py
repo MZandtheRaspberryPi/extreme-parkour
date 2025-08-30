@@ -377,7 +377,8 @@ class LeggedRobot(BaseTask):
         self.feet_air_time[env_ids] = 0.
         self.reset_buf[env_ids] = 1
         self.obs_history_buf[env_ids, :, :] = 0.  # reset obs history buffer TODO no 0s
-        self.priv_obs_history_buf[env_ids, :, :] = 0.
+        if self.cfg.env.num_privileged_obs is not None:
+            self.priv_obs_history_buf[env_ids, :, :] = 0.
         self.contact_buf[env_ids, :, :] = 0.
         self.action_history_buf[env_ids, :, :] = 0.
         if self.cfg.terrain.curriculum:
@@ -467,7 +468,8 @@ class LeggedRobot(BaseTask):
                             self.reindex_feet(self.contact_filt.float()-0.5), # 44 - 47 inclusive
                             ),dim=-1)
 
-        priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel), dim=-1)
+        if self.cfg.env.num_privileged_obs is not None:
+            priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel), dim=-1)
 
         if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
             obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
@@ -480,15 +482,19 @@ class LeggedRobot(BaseTask):
         
         obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
         obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos
-        obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel       
-        priv_obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
-        priv_obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos
-        priv_obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel
+        obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel
+
+        if self.cfg.env.num_privileged_obs is not None:
+            priv_obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
+            priv_obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos
+            priv_obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel
+            priv_obs_buf[:, -3:] *= self.obs_scales.lin_vel
 
         if self.cfg.terrain.measure_heights:
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.3 - self.measured_heights, -1, 1.)
             self.obs_buf = torch.cat([obs_buf, heights, self.obs_history_buf.view(self.num_envs, -1)], dim=-1)
-            self.priv_obs_buf = torch.cat([priv_obs_buf, heights, self.priv_obs_history_buf.view(self.num_envs, -1)], dim=-1)
+            if self.cfg.env.num_privileged_obs is not None:
+                self.privileged_obs_buf = torch.cat([priv_obs_buf, heights, self.priv_obs_history_buf.view(self.num_envs, -1)], dim=-1)
         else:
             raise NotImplementedError
 
@@ -501,14 +507,15 @@ class LeggedRobot(BaseTask):
             ], dim=1)
         )
 
-        self.priv_obs_history_buf = torch.where(
-            (self.episode_length_buf <= 1)[:, None, None], 
-            torch.stack([priv_obs_buf] * self.cfg.env.history_len, dim=1),
-            torch.cat([
-                self.priv_obs_history_buf[:, 1:],
-                priv_obs_buf.unsqueeze(1)
-            ], dim=1)
-        )
+        if self.cfg.env.num_privileged_obs is not None:
+            self.priv_obs_history_buf = torch.where(
+                (self.episode_length_buf <= 1)[:, None, None], 
+                torch.stack([priv_obs_buf] * self.cfg.env.history_len, dim=1),
+                torch.cat([
+                    self.priv_obs_history_buf[:, 1:],
+                    priv_obs_buf.unsqueeze(1)
+                ], dim=1)
+            )
 
         self.contact_buf = torch.where(
             (self.episode_length_buf <= 1)[:, None, None], 
@@ -826,6 +833,7 @@ class LeggedRobot(BaseTask):
         self.motor_strength = (str_rng[1] - str_rng[0]) * torch.rand(2, self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False) + str_rng[0]
         if self.cfg.env.history_encoding:
             self.obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio, device=self.device, dtype=torch.float)
+        if self.cfg.env.num_privileged_obs is not None:
             self.priv_obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio_priv, device=self.device, dtype=torch.float)
         self.action_history_buf = torch.zeros(self.num_envs, self.cfg.domain_rand.action_buf_len, self.num_dofs, device=self.device, dtype=torch.float)
         self.contact_buf = torch.zeros(self.num_envs, self.cfg.env.contact_buf_len, 4, device=self.device, dtype=torch.float)
