@@ -45,11 +45,12 @@ class LeggedRobotCfg(BaseConfig):
         n_scan = 132
         n_priv = 3+3 +3
         n_priv_latent = 4 + 1 + 12 +12
-        n_proprio = 3 + 2 + 3 + 4 + 36 + 5
+        n_proprio = 3 + 2 + 3 + 36 + 4
+        n_proprio_priv = 3 + 2 + 3 + 36 + 4 + 3
         history_len = 10
 
-        num_observations = n_proprio + n_scan + history_len*n_proprio + n_priv_latent + n_priv #n_scan + n_proprio + n_priv #187 + 47 + 5 + 12 
-        num_privileged_obs = None # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
+        num_observations = n_proprio + n_scan + history_len*n_proprio #n_scan + n_proprio + n_priv #187 + 47 + 5 + 12 
+        num_privileged_obs = n_proprio_priv + n_scan + history_len*n_proprio_priv  # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
         num_actions = 12
         env_spacing = 3.  # not used with heightfields/trimeshes 
         send_timeouts = True # send time out information to the algorithm
@@ -212,7 +213,7 @@ class LeggedRobotCfg(BaseConfig):
 
         # Easy ranges
         class max_ranges:
-            lin_vel_x = [0.3, 0.5] # min max [m/s]
+            lin_vel_x = [0.2, 0.6] # min max [m/s]
             lin_vel_y = [0.0, 0.0]#[0.15, 0.6]   # min max [m/s]
             ang_vel_yaw = [0.0, 0.0]    # min max [rad/s]
             heading = [-1.6, 1.6]
