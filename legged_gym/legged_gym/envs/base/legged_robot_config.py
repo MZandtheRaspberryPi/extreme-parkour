@@ -128,7 +128,7 @@ class LeggedRobotCfg(BaseConfig):
             height_measurements = 0.02
 
     class terrain:
-        mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
+        mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
         hf2mesh_method = "grid"  # grid or fast
         max_error = 0.1 # for fast
         max_error_camera = 2
@@ -145,7 +145,7 @@ class LeggedRobotCfg(BaseConfig):
         gap_size = [0.02, 0.1]
         stepping_stone_distance = [0.02, 0.08]
         downsampled_scale = 0.075
-        curriculum = False
+        curriculum = True
 
         all_vertical = False
         no_flat = True
