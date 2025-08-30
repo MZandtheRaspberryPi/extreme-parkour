@@ -113,7 +113,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
             exceed_dof_pos_limits = -0.4
             # exceed_torque_limits_l1norm = -0.4
             dof_vel_limits = -0.4
-        only_positive_rewards = False
+        only_positive_rewards = True
         soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9
         soft_torque_limit = 0.9

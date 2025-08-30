@@ -293,7 +293,7 @@ class LeggedRobotCfg(BaseConfig):
             # tracking_goal_vel = 1.5
             # tracking_yaw = 0.5
             # regularization rewards
-            lin_vel_z = -1.0
+            # lin_vel_z = -1.0
             # ang_vel_xy = -0.05
             tracking_lin_vel = 1.0
             ang_vel_xy_tracking = 1.0
@@ -411,7 +411,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         max_iterations = 50000 # number of policy updates
 
         # logging
-        save_interval = 100 # check for potential saves every this many iterations
+        save_interval = 250 # check for potential saves every this many iterations
         experiment_name = 'rough_a1'
         run_name = ''
         # load and resume
