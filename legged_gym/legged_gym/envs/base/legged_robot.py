@@ -470,7 +470,7 @@ class LeggedRobot(BaseTask):
                             ),dim=-1)
 
         if self.cfg.env.num_privileged_obs is not None:
-            priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel, self.yaw), dim=-1)
+            priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel, self.yaw.unsqueeze(1)), dim=-1)
 
         if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
             obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
