@@ -248,11 +248,12 @@ class LeggedRobot(BaseTask):
 
         norm = torch.norm(self.target_pos_rel, dim=-1, keepdim=True)
         target_vec_norm = self.target_pos_rel / (norm + 1e-5)
-        self.target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
+        # self.target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
+        self.target_yaw = torch.zeros_like(target_vec_norm[:, 0])
 
         norm = torch.norm(self.next_target_pos_rel, dim=-1, keepdim=True)
         target_vec_norm = self.next_target_pos_rel / (norm + 1e-5)
-        self.next_target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
+        # self.next_target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
 
     def post_physics_step(self):
         """ check terminations, compute observations and rewards
@@ -1433,8 +1434,8 @@ class LeggedRobot(BaseTask):
     def _reward_stand_still(self):
         # Penalize motion at zero commands
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) \
-            * (torch.norm(self.commands[:, :2], dim=1) < 0.1) \
-            * (torch.abs(self.commands[:, 2] < 0.2))
+            * (torch.norm(self.commands[:, :2], dim=1) < 0.2) \
+            * (torch.abs(self.commands[:, 2] < 0.4))
 
     def _reward_exceed_dof_pos_limits(self):
         below_low = self.dof_pos < self.dof_pos_limits_cfg[:, 0]
