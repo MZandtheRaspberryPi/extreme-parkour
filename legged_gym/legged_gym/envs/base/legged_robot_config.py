@@ -297,7 +297,7 @@ class LeggedRobotCfg(BaseConfig):
             lin_vel_z = -1.0
             # ang_vel_xy = -0.05
             tracking_lin_vel = 1.0
-            ang_vel_xy_tracking = 0.5
+            # ang_vel_xy_tracking = 0.5
             ang_vel_xy = -0.05
             # stand_still = -2
             # lin_vel_y = -0.5
