@@ -182,9 +182,9 @@ class LeggedRobotCfg(BaseConfig):
                         "large stairs up": 0.,
                         "large stairs down": 0.,
                         "parkour": 0.0,
-                        "parkour_hurdle": 0.4,
-                        "parkour_flat": 0.4,
-                        "parkour_step": 0.2,
+                        "parkour_hurdle": 0.0,
+                        "parkour_flat": 1.0,
+                        "parkour_step": 0.0,
                         "parkour_gap": 0.0,
                         "demo": 0.0,}
         terrain_proportions = list(terrain_dict.values())
@@ -292,9 +292,9 @@ class LeggedRobotCfg(BaseConfig):
         class scales:
             # tracking rewards
             # tracking_goal_vel = 1.5
-            # tracking_yaw = 0.5
+            tracking_yaw = 0.5
             # regularization rewards
-            lin_vel_z = -2.0
+            lin_vel_z = -1.0
             # ang_vel_xy = -0.05
             tracking_lin_vel = 1.5
             ang_vel_xy_tracking = 0.5

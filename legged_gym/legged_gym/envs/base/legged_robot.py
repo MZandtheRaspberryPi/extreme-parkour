@@ -38,6 +38,7 @@ from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
 
 import torch, torchvision
+import torch.nn.functional as F
 from torch import Tensor
 from typing import Tuple, Dict
 
@@ -159,22 +160,125 @@ class LeggedRobot(BaseTask):
         return self.obs_history_buf
     
     def normalize_depth_image(self, depth_image):
-        depth_image = depth_image * -1
         depth_image = (depth_image - self.cfg.depth.near_clip) / (self.cfg.depth.far_clip - self.cfg.depth.near_clip)  - 0.5
         return depth_image
     
     def process_depth_image(self, depth_image, env_id):
         # These operations are replicated on the hardware
+        # reverse negative image, only in sim
+        depth_image = depth_image * -1
         depth_image = self.crop_depth_image(depth_image)
+        depth_image = self._add_depth_artifacts(depth_image, self.cfg.depth.artifact_prob,
+            self.cfg.depth.artifact_height_mean_std, self.cfg.depth.artifact_width_mean_std)
         depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
-        depth_image = torch.clip(depth_image, -self.cfg.depth.far_clip, -self.cfg.depth.near_clip)
+        depth_image = torch.clip(depth_image, self.cfg.depth.near_clip, self.cfg.depth.far_clip)
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
         depth_image = self.normalize_depth_image(depth_image)
         return depth_image
 
+    @torch.no_grad()
+    def form_artifacts(self,
+            H, W, # image resolution
+            tops, bottoms, # artifacts positions (in pixel) shape (n_,)
+            lefts, rights,
+        ):
+        """ Paste an artifact to the depth image.
+        NOTE: Using the paradigm of spatial transformer network to build the artifacts of the
+        entire depth image.
+        """
+        batch_size = tops.shape[0]
+        tops, bottoms = tops[:, None, None], bottoms[:, None, None]
+        lefts, rights = lefts[:, None, None], rights[:, None, None]
+
+        # build the source patch
+        source_patch = torch.zeros((batch_size, 1, 25, 25), device= self.device)
+        source_patch[:, :, 1:24, 1:24] = 1.
+
+        # build the grid
+        grid = torch.zeros((batch_size, H, W, 2), device= self.device)
+        grid[..., 0] = torch.linspace(-1, 1, W, device= self.device).view(1, 1, W)
+        grid[..., 1] = torch.linspace(-1, 1, H, device= self.device).view(1, H, 1)
+        grid[..., 0] = (grid[..., 0] * W + W - rights - lefts) / (rights - lefts)
+        grid[..., 1] = (grid[..., 1] * H + H - bottoms - tops) / (bottoms - tops)
+
+        # sample using the grid and form the artifacts for the entire depth image
+        artifacts = torch.clip(
+            F.grid_sample(
+                source_patch,
+                grid,
+                mode= "bilinear",
+                padding_mode= "zeros",
+                align_corners= False,
+            ).sum(dim= 0).view(H, W),
+            0, 1,
+        )
+
+        return artifacts
+
+    def _add_depth_artifacts(self, depth_image, artifacts_prob, artifacts_height_mean_std, artifacts_width_mean_std):
+
+        # artifacts_height_mean_std is (usual height, std dev of height)
+        # artifacts_width_mean_std is (usual_width, std dev of width)
+        
+        h, w = depth_image.shape
+
+        def _clip(x, dim):
+            return torch.clip(x, 0., (h, w)[dim])
+        
+        # random patched artifacts
+        artifacts_mask = torch.rand(
+            (h, w),
+            device= self.device,
+        ) < artifacts_prob
+        artifacts_mask = torch.rand(
+            (self.cfg.depth.original[0], self.cfg.depth.original[1]), device=self.device
+        ) < artifacts_prob
+        
+        artifacts_coord = torch.nonzero(artifacts_mask).to(torch.float32)
+        artifacts_size = (
+            torch.clip(
+                artifacts_height_mean_std[0] + torch.randn(
+                    (artifacts_coord.shape[0],),
+                    device= self.device,
+                ) * artifacts_height_mean_std[1],
+                0., h,
+            ),
+            torch.clip(
+                artifacts_width_mean_std[0] + torch.randn(
+                    (artifacts_coord.shape[0],),
+                    device= self.device,
+                ) * artifacts_width_mean_std[1],
+                0., w,
+            ),
+        )
+
+        # so we have nx1 for 
+
+        artifacts_top_left = (
+            _clip(artifacts_coord[:, 0] - artifacts_size[0] / 2, 0),
+            _clip(artifacts_coord[:, 1] - artifacts_size[1] / 2, 1),
+        )
+
+        artifacts_bottom_right = (
+            _clip(artifacts_coord[:, 0] + artifacts_size[0] / 2, 0),
+            _clip(artifacts_coord[:, 1] + artifacts_size[1] / 2, 1),
+        )
+
+        art_mask = self.form_artifacts(h, w,
+                artifacts_top_left[0],
+                artifacts_bottom_right[0],
+                artifacts_top_left[1],
+                artifacts_bottom_right[1],
+            )
+
+
+        depth_image *= (1 - art_mask) # torch.where(new_mask, self.cfg.depth.far_clip, depth_image)
+
+        return depth_image
+
+
     def crop_depth_image(self, depth_image):
-        # crop 30 pixels from the left and right and and 20 pixels from bottom and return croped image
-        return depth_image[:-2, 4:-4]
+        return depth_image[:-self.cfg.depth.bottom_clip, self.cfg.depth.left_right_clip:-self.cfg.depth.left_right_clip]
 
     def update_depth_buffer(self):
         if not self.cfg.depth.use_camera:
@@ -182,6 +286,7 @@ class LeggedRobot(BaseTask):
 
         if self.global_counter % self.cfg.depth.update_interval != 0:
             return
+
         self.gym.step_graphics(self.sim) # required to render in headless mode
         self.gym.render_all_camera_sensors(self.sim)
         self.gym.start_access_image_tensors(self.sim)
@@ -307,9 +412,10 @@ class LeggedRobot(BaseTask):
 
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self.gym.clear_lines(self.viewer)
-            # self._draw_height_samples()
+            self._draw_height_samples()
             if self.cfg.terrain.curriculum:
                 self._draw_goals()
+                pass
             self._draw_feet()
             if self.cfg.depth.use_camera:
                 window_name = "Depth Image"
@@ -434,6 +540,9 @@ class LeggedRobot(BaseTask):
 
         self.rotation_start_idx = 3
         self.rotation_end_idx = 5
+
+        self.cmd_start_idx = 5
+        self.command_end_idx = 8
         
         self.dof_pos_start_idx = 8
         self.dof_pos_end_idx = 20
@@ -526,12 +635,6 @@ class LeggedRobot(BaseTask):
                 self.contact_filt.float().unsqueeze(1)
             ], dim=1)
         )
-        
-        
-    def get_noisy_measurement(self, x, scale):
-        if self.cfg.noise.add_noise:
-            x = x + (2.0 * torch.rand_like(x) - 1) * scale * self.cfg.noise.noise_level
-        return x
 
     def create_sim(self):
         """ Creates simulation, terrain and evironments
@@ -979,7 +1082,7 @@ class LeggedRobot(BaseTask):
             camera_props.width = self.cfg.depth.original[0]
             camera_props.height = self.cfg.depth.original[1]
             camera_props.enable_tensors = True
-            camera_horizontal_fov = self.cfg.depth.horizontal_fov 
+            camera_horizontal_fov = np.random.uniform(self.cfg.depth.horizontal_fov[0], self.cfg.depth.horizontal_fov[1])
             camera_props.horizontal_fov = camera_horizontal_fov
 
             # position_min = [0.28, 0, 0.10]  # front camera

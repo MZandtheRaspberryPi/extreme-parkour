@@ -134,19 +134,30 @@ class Go2RoughCfg( LeggedRobotCfg ):
         angle_min = [-1, 21.2, 0.0]
         angle_max = [1, 24.6, 0.0]
 
-        update_interval = 5  # 5 works without retraining, 8 worse
+        # we do 15 fps in reality, if we run policy at 50hz, for each 3.33 steps in sim per update ((1/15)/(1/50))
+        update_interval = 4  # 5 works without retraining, 8 worse
 
         original = (int(640/4), int(480/4))
         resized = (87, 58)
-        horizontal_fov = 88
         buffer_len = 2
         
-        near_clip = 0
-        far_clip = 2
+        # realsense d435
+        # https://www.intel.com/content/www/us/en/products/sku/128255/intel-realsense-depth-camera-d435/specifications.html
+        # horizontal_fov = 85.2
+        horizontal_fov = [83, 87.2]
+        # this is from original image size
+        left_right_clip = 20
+        bottom_clip = 2
+        near_clip = 0.3
+        far_clip = 3.0
         dis_noise = 0.3
         
         scale = 1
         invert = True
+
+        artifact_prob = 0.005
+        artifact_height_mean_std = (3, 3)
+        artifact_width_mean_std = (3, 3)
     
     class noise:
         add_noise = True
