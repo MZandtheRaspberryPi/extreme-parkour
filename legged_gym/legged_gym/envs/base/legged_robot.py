@@ -166,12 +166,13 @@ class LeggedRobot(BaseTask):
     def process_depth_image(self, depth_image, env_id):
         # These operations are replicated on the hardware
         # reverse negative image, only in sim
+        # we do get infinities, so account for that
         depth_image = depth_image * -1
+        depth_image = torch.clip(depth_image, self.cfg.depth.near_clip, self.cfg.depth.far_clip)
         depth_image = self.crop_depth_image(depth_image)
         depth_image = self._add_depth_artifacts(depth_image, self.cfg.depth.artifact_prob,
             self.cfg.depth.artifact_height_mean_std, self.cfg.depth.artifact_width_mean_std)
         depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
-        depth_image = torch.clip(depth_image, self.cfg.depth.near_clip, self.cfg.depth.far_clip)
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
         depth_image = self.normalize_depth_image(depth_image)
         return depth_image
