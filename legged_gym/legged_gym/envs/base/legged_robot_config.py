@@ -295,15 +295,15 @@ class LeggedRobotCfg(BaseConfig):
             # tracking_yaw = 0.5
             # regularization rewards
             lin_vel_z = -2.0
-            ang_vel_xy = -0.2
-            tracking_lin_vel = 1.5
+            # ang_vel_xy = -0.2
+            tracking_lin_vel = 1.0
             ang_vel_xy_tracking = 1.0
             # ang_vel_xy = -0.05
             # stand_still = -2
             # lin_vel_y = -0.5
             orientation = -1.
             dof_acc = -2.5e-7
-            collision = -2.
+            collision = -10.
             action_rate = -0.1
             delta_torques = -1.0e-7
             torques = -0.00001
