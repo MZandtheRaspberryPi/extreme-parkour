@@ -550,8 +550,8 @@ class LeggedRobot(BaseTask):
         self.dof_vel_start_idx = 20
         self.dof_vel_end_idx = 32
         
-        self.contact_filt_start_idx = 49
-        self.contact_filt_end_idx = 53
+        self.contact_filt_start_idx = 44
+        self.contact_filt_end_idx = 48
 
         # ang vel
         noise_vec[self.ang_vel_start_idx:self.ang_vel_end_idx] = self.cfg.noise.noise_scales.ang_vel
