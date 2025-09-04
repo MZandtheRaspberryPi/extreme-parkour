@@ -937,11 +937,11 @@ class LeggedRobot(BaseTask):
         str_rng = self.cfg.domain_rand.motor_strength_range
         self.motor_strength = (str_rng[1] - str_rng[0]) * torch.rand(2, self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False) + str_rng[0]
         if self.cfg.env.history_encoding:
-            self.obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio, device=self.device, dtype=torch.float)
+            self.obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio, device=self.device, dtype=torch.float, requires_grad=False)
         if self.cfg.env.num_privileged_obs is not None:
-            self.priv_obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio_priv, device=self.device, dtype=torch.float)
-        self.action_history_buf = torch.zeros(self.num_envs, self.cfg.domain_rand.action_buf_len, self.num_dofs, device=self.device, dtype=torch.float)
-        self.contact_buf = torch.zeros(self.num_envs, self.cfg.env.contact_buf_len, 4, device=self.device, dtype=torch.float)
+            self.priv_obs_history_buf = torch.zeros(self.num_envs, self.cfg.env.history_len, self.cfg.env.n_proprio_priv, device=self.device, dtype=torch.float, requires_grad=False)
+        self.action_history_buf = torch.zeros(self.num_envs, self.cfg.domain_rand.action_buf_len, self.num_dofs, device=self.device, dtype=torch.float, requires_grad=False)
+        self.contact_buf = torch.zeros(self.num_envs, self.cfg.env.contact_buf_len, 4, device=self.device, dtype=torch.float, requires_grad=False)
 
         self.commands = torch.zeros(self.num_envs, self.cfg.commands.num_commands, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel, heading
         self._resample_commands(torch.arange(self.num_envs, device=self.device, requires_grad=False))
@@ -985,7 +985,7 @@ class LeggedRobot(BaseTask):
             self.depth_buffer = torch.zeros(self.num_envs,  
                                             self.cfg.depth.buffer_len, 
                                             self.cfg.depth.resized[1], 
-                                            self.cfg.depth.resized[0]).to(self.device)
+                                            self.cfg.depth.resized[0], requires_grad=False).to(self.device)
 
         self.dof_pos_limits_cfg = torch.zeros(self.num_dof, 2, dtype=torch.float32, device=self.device, requires_grad=False)
         self.torque_limits_cfg = torch.zeros(self.num_dof, dtype=torch.float32, device=self.device, requires_grad=False)
