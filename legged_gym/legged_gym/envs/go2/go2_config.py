@@ -128,8 +128,8 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        position_min = [0.28, 0, 0.11]  # front camera
-        position_max = [0.32, 0, 0.16]  # front camera
+        position_min = [0.335, 0, 0.125]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        position_max = [0.355, 0, 0.135]  # front camera
         # degrees, euler
         angle_min = [-1, 21.2, 0.0]
         angle_max = [1, 24.6, 0.0]
@@ -144,18 +144,18 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # realsense d435
         # https://www.intel.com/content/www/us/en/products/sku/128255/intel-realsense-depth-camera-d435/specifications.html
         # horizontal_fov = 85.2
-        horizontal_fov = [83, 87.2]
+        horizontal_fov = [83.2, 87.2]
         # this is from original image size
         left_right_clip = 20
         bottom_clip = 2
         near_clip = 0.3
         far_clip = 3.0
-        dis_noise = 0.3
+        dis_noise = 0.05
         
         scale = 1
         invert = True
 
-        artifact_prob = 0.005
+        artifact_prob = 0.0025
         artifact_height_mean_std = (3, 3)
         artifact_width_mean_std = (3, 3)
     
@@ -166,8 +166,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
             dof_pos = 0.01
             dof_vel = 1.5
             ang_vel = 0.2
-            delta_yaw = 0.00
-        contact_filt_flip_prob = 0.025
+        contact_filt_flip_prob = 0.05
         global_steps_delay = 0 # 24*280*50 # Go2RoughCfgPPO.runner.num_steps_per_env * 2000
 
 

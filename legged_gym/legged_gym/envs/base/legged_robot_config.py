@@ -182,10 +182,10 @@ class LeggedRobotCfg(BaseConfig):
                         "large stairs up": 0.,
                         "large stairs down": 0.,
                         "parkour": 0.0,
-                        "parkour_hurdle": 0.3,
-                        "parkour_flat": 0.2,
-                        "parkour_step": 0.3,
-                        "parkour_gap": 0.2,
+                        "parkour_hurdle": 0.0,
+                        "parkour_flat": 1.0,
+                        "parkour_step": 0.0,
+                        "parkour_gap": 0.0,
                         "demo": 0.0,}
         terrain_proportions = list(terrain_dict.values())
         
@@ -215,7 +215,7 @@ class LeggedRobotCfg(BaseConfig):
         class max_ranges:
             lin_vel_x = [0.2, 0.6] # min max [m/s]
             lin_vel_y = [0.0, 0.0]#[0.15, 0.6]   # min max [m/s]
-            ang_vel_yaw = [0.0, 0.0]    # min max [rad/s]
+            ang_vel_yaw = [-1.0, 1.0]    # min max [rad/s]
             heading = [-1.6, 1.6]
 
         class crclm_incremnt:
@@ -296,22 +296,22 @@ class LeggedRobotCfg(BaseConfig):
             # regularization rewards
             lin_vel_z = -2
             # ang_vel_xy = -0.2
-            tracking_lin_vel = 1.0
+            tracking_lin_vel = 1.5
             ang_vel_xy_tracking = 1.0
             # ang_vel_xy = -0.05
             # stand_still = -2
             # lin_vel_y = -0.5
             orientation = -1.
             dof_acc = -2.5e-7
-            collision = -1.
-            action_rate = -0.01
+            collision = -10.
+            action_rate = -0.1
             delta_torques = -1.0e-7
             torques = -0.00001
             hip_pos = -1.0
             dof_error = -0.04
             feet_stumble = -1
             #feet_edge = -1
-            feet_air_time = 0.5
+            # feet_air_time = 1.0
             
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
         tracking_sigma = 0.2 # tracking reward = exp(-error^2/sigma)
