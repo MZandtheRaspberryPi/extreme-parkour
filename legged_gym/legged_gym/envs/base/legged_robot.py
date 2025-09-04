@@ -489,6 +489,7 @@ class LeggedRobot(BaseTask):
             self.priv_obs_history_buf[env_ids, :, :] = 0.
         self.contact_buf[env_ids, :, :] = 0.
         self.action_history_buf[env_ids, :, :] = 0.
+        self.last_contacts[env_ids, :] = False
         if self.cfg.terrain.curriculum:
             self.cur_goal_idx[env_ids] = 0
         self.reach_goal_timer[env_ids] = 0
