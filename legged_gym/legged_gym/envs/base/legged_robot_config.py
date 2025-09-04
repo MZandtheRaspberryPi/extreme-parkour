@@ -299,7 +299,7 @@ class LeggedRobotCfg(BaseConfig):
             # ang_vel_xy = -0.2
             tracking_lin_vel = 1.0
             ang_vel_xy_tracking = 1.0
-            # ang_vel_xy = -0.05
+            # ang_vel_xy = -0.2
             # stand_still = -2
             # lin_vel_y = -0.5
             orientation = -1.0
@@ -312,7 +312,7 @@ class LeggedRobotCfg(BaseConfig):
             dof_error = -0.04
             feet_stumble = -1
             feet_edge = -1
-            # feet_air_time = 1.0
+            feet_air_time = 1.0
             
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
         tracking_sigma = 0.2 # tracking reward = exp(-error^2/sigma)
@@ -384,6 +384,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         lam = 0.95
         desired_kl = 0.01
         max_grad_norm = 1.
+        logstd_init = 0.0
         # dagger params
         dagger_update_freq = 20
         priv_reg_coef_schedual = [0, 0.1, 2000, 3000]

@@ -1536,7 +1536,7 @@ class LeggedRobot(BaseTask):
         first_contact = (self.feet_air_time > 0.) * self.contact_filt
         self.feet_air_time += self.dt
         rew_airTime = torch.sum((self.feet_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
-        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        rew_airTime *= torch.logical_or(torch.norm(self.commands[:, :2], dim=1) > 0.2, torch.abs(self.commands[:, 2]) > 0.4) #no reward for zero command
         self.feet_air_time *= ~self.contact_filt
         return rew_airTime
 
