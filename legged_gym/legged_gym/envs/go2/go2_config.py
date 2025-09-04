@@ -111,7 +111,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         class scales(LeggedRobotCfg.rewards.scales):
             exceed_dof_pos_limits = -0.4
-            exceed_torque_limits_l1norm = -0.4
+            # exceed_torque_limits_l1norm = -0.4
             dof_vel_limits = -0.4
         soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9
@@ -166,7 +166,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
             dof_pos = 0.01
             dof_vel = 1.5
             ang_vel = 0.2
-        contact_filt_flip_prob = 0.05
+        contact_filt_flip_prob = 0.00
         global_steps_delay = 0 # 24*280*50 # Go2RoughCfgPPO.runner.num_steps_per_env * 2000
 
 
