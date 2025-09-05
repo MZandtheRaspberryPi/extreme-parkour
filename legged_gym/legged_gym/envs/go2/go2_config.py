@@ -56,7 +56,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         foot_name = "foot"
         front_hip_names = ["FL_hip_joint", "FR_hip_joint"]
         rear_hip_names = ["RL_hip_joint", "RR_hip_joint"]
-        penalize_contacts_on = ["base", "Head"]
+        penalize_contacts_on = ["base", "Head", "thigh", "calf"]
         terminate_after_contacts_on = []#, "thigh", "calf"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         sdk_dof_range = go2_const_dof_range
@@ -109,10 +109,10 @@ class Go2RoughCfg( LeggedRobotCfg ):
 
   
     class rewards( LeggedRobotCfg.rewards ):
-        class scales(LeggedRobotCfg.rewards.scales):
-            exceed_dof_pos_limits = -0.4
-            exceed_torque_limits_l1norm = -0.4
-            dof_vel_limits = -0.4
+        # class scales(LeggedRobotCfg.rewards.scales):
+        #     # exceed_dof_pos_limits = -0.4
+        #     exceed_torque_limits_l1norm = -0.4
+        #     dof_vel_limits = -0.4
         soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9
         soft_torque_limit = 0.9

@@ -354,12 +354,12 @@ class LeggedRobot(BaseTask):
 
         norm = torch.norm(self.target_pos_rel, dim=-1, keepdim=True)
         target_vec_norm = self.target_pos_rel / (norm + 1e-5)
-        # self.target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
-        self.target_yaw = torch.zeros_like(target_vec_norm[:, 0])
+        self.target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
+        # self.target_yaw = torch.zeros_like(target_vec_norm[:, 0])
 
         norm = torch.norm(self.next_target_pos_rel, dim=-1, keepdim=True)
         target_vec_norm = self.next_target_pos_rel / (norm + 1e-5)
-        # self.next_target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
+        self.next_target_yaw = torch.atan2(target_vec_norm[:, 1], target_vec_norm[:, 0])
 
     def post_physics_step(self):
         """ check terminations, compute observations and rewards
@@ -554,6 +554,11 @@ class LeggedRobot(BaseTask):
         self.contact_filt_start_idx = 44
         self.contact_filt_end_idx = 48
 
+        self.priv_obs_lin_vel_start_idx = 48
+        self.priv_obs_lin_vel_end_idx = 52
+        self.priv_obs_target_yaw_start_idx = 52
+        self.priv_obs_target_yaw_end_idx = 54
+
         # ang vel
         noise_vec[self.ang_vel_start_idx:self.ang_vel_end_idx] = self.cfg.noise.noise_scales.ang_vel
         noise_vec[self.rotation_start_idx:self.rotation_end_idx] = self.cfg.noise.noise_scales.rotation
@@ -569,11 +574,17 @@ class LeggedRobot(BaseTask):
         Computes observations
         """
         imu_obs = torch.stack((self.roll, self.pitch), dim=1)
+
+        if self.global_counter % 5 == 0:
+            self.delta_yaw = self.target_yaw - self.yaw
+            self.delta_next_yaw = self.next_target_yaw - self.yaw
+
         # 7,8,10
         obs_buf = torch.cat((#skill_vector, 
                             self.base_ang_vel,   #[1,3] 0, 1, 2
                             imu_obs,    #[1,2] 3, 4
-                            self.commands[:, 0:3], # 5, 6, 7
+                            self.commands[:, 0:1], # 5
+                            0.0 * self.commands[:, 1:3], # 6, 7
                             self.reindex((self.dof_pos - self.default_dof_pos_all)), # 8-19 inclusive
                             self.reindex(self.dof_vel), # 20 - 31 inclusive
                             self.reindex(self.action_history_buf[:, -1]), # 32 - 43 inclusive
@@ -581,7 +592,8 @@ class LeggedRobot(BaseTask):
                             ),dim=-1)
 
         if self.cfg.env.num_privileged_obs is not None:
-            priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel, self.yaw.unsqueeze(1)), dim=-1)
+            priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel, self.delta_yaw[:, None],
+                                      self.delta_next_yaw[:, None],), dim=-1)
 
         if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
             obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
@@ -600,7 +612,7 @@ class LeggedRobot(BaseTask):
             priv_obs_buf[:, self.ang_vel_start_idx:self.ang_vel_end_idx] *= self.obs_scales.ang_vel
             priv_obs_buf[:, self.dof_pos_start_idx:self.dof_pos_end_idx] *= self.obs_scales.dof_pos
             priv_obs_buf[:, self.dof_vel_start_idx:self.dof_vel_end_idx] *= self.obs_scales.dof_vel
-            priv_obs_buf[:, -4:-1] *= self.obs_scales.lin_vel
+            priv_obs_buf[:, self.priv_obs_lin_vel_start_idx:self.priv_obs_lin_vel_end_idx] *= self.obs_scales.lin_vel
 
         if self.cfg.terrain.measure_heights:
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.3 - self.measured_heights, -1, 1.)
@@ -1481,6 +1493,7 @@ class LeggedRobot(BaseTask):
     
     def _reward_lin_vel_z(self):
         rew = torch.square(self.base_lin_vel[:, 2])
+        rew[self.env_class != 17] *= 0.5
         return rew
     
     def _reward_ang_vel_xy(self):

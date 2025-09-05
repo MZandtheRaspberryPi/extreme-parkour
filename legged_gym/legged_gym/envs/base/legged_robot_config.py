@@ -46,11 +46,11 @@ class LeggedRobotCfg(BaseConfig):
         n_priv = 3+3 +3
         n_priv_latent = 4 + 1 + 12 +12
         n_proprio = 3 + 2 + 3 + 36 + 4
-        n_proprio_priv = 3 + 2 + 3 + 36 + 4 + 3 + 1
+        n_proprio_priv = 3 + 2 + 3 + 36 + 4 + 3 + 2
         history_len = 10
 
-        num_observations = n_proprio + n_scan + history_len*n_proprio #n_scan + n_proprio + n_priv #187 + 47 + 5 + 12 
-        num_privileged_obs = n_proprio_priv + n_scan + history_len*n_proprio_priv  # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
+        num_observations = n_proprio + n_scan + history_len*n_proprio + 2 #n_scan + n_proprio + n_priv #187 + 47 + 5 + 12  + 2
+        num_privileged_obs = n_proprio_priv + n_scan + history_len*n_proprio_priv # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
         num_actions = 12
         env_spacing = 3.  # not used with heightfields/trimeshes 
         send_timeouts = True # send time out information to the algorithm
@@ -181,11 +181,11 @@ class LeggedRobotCfg(BaseConfig):
                         "platform": 0.,
                         "large stairs up": 0.,
                         "large stairs down": 0.,
-                        "parkour": 0.0,
-                        "parkour_hurdle": 0.0,
-                        "parkour_flat": 1.0,
-                        "parkour_step": 0.0,
-                        "parkour_gap": 0.0,
+                        "parkour": 0.2,
+                        "parkour_hurdle": 0.2,
+                        "parkour_flat": 0.2,
+                        "parkour_step": 0.2,
+                        "parkour_gap": 0.2,
                         "demo": 0.0,}
         terrain_proportions = list(terrain_dict.values())
         
@@ -200,7 +200,7 @@ class LeggedRobotCfg(BaseConfig):
         max_curriculum = 1.
         num_commands = 4 # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 6. # time before command are changed[s]
-        heading_command = False # if true: compute ang vel command from heading error
+        heading_command = True # if true: compute ang vel command from heading error
         
         lin_vel_clip = 0.2
         ang_vel_clip = 0.4
@@ -213,9 +213,9 @@ class LeggedRobotCfg(BaseConfig):
 
         # Easy ranges
         class max_ranges:
-            lin_vel_x = [0.2, 0.6] # min max [m/s]
+            lin_vel_x = [0.3, 0.8] # min max [m/s]
             lin_vel_y = [0.0, 0.0]#[0.15, 0.6]   # min max [m/s]
-            ang_vel_yaw = [-1.0, 1.0]    # min max [rad/s]
+            ang_vel_yaw = [0.0, 0.0]    # min max [rad/s]
             heading = [-1.6, 1.6]
 
         class crclm_incremnt:
@@ -291,14 +291,14 @@ class LeggedRobotCfg(BaseConfig):
     class rewards:
         class scales:
             # tracking rewards
-            # tracking_goal_vel = 1.5
-            # tracking_yaw = 0.5
+            tracking_goal_vel = 1.5
+            tracking_yaw = 0.5
             # regularization rewards
             # yaw = -1.0
-            lin_vel_z = -2.0
-            # ang_vel_xy = -0.2
-            tracking_lin_vel = 1.0
-            ang_vel_xy_tracking = 1.0
+            lin_vel_z = -1.0
+            ang_vel_xy = -0.05
+            # tracking_lin_vel = 1.0
+            # ang_vel_xy_tracking = 1.0
             # ang_vel_xy = -0.2
             # stand_still = -2
             # lin_vel_y = -0.5
@@ -308,11 +308,11 @@ class LeggedRobotCfg(BaseConfig):
             action_rate = -0.1
             delta_torques = -1.0e-7
             torques = -0.00001
-            hip_pos = -1.0
+            hip_pos = -0.5
             dof_error = -0.04
             feet_stumble = -1
             feet_edge = -1
-            feet_air_time = 1.0
+            # feet_air_time = 1.0
             
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
         tracking_sigma = 0.2 # tracking reward = exp(-error^2/sigma)
@@ -344,7 +344,7 @@ class LeggedRobotCfg(BaseConfig):
             rest_offset = 0.0   # [m]
             bounce_threshold_velocity = 0.5 #0.5 [m/s]
             max_depenetration_velocity = 1.0
-            max_gpu_contact_pairs = 2**24 #2**24 -> needed for 8000 envs and more
+            max_gpu_contact_pairs = 2**23 #2**24 -> needed for 8000 envs and more
             default_buffer_size_multiplier = 5
             contact_collection = 2 # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
             # gpu_total_aggregate_pairs_capacity = 2048
@@ -384,7 +384,9 @@ class LeggedRobotCfgPPO(BaseConfig):
         lam = 0.95
         desired_kl = 0.01
         max_grad_norm = 1.
-        logstd_init = 0.0
+        logstd_init = 0.5
+        enable_vids = True
+        num_envs_to_video = 4
         # dagger params
         dagger_update_freq = 20
         priv_reg_coef_schedual = [0, 0.1, 2000, 3000]
