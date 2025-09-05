@@ -141,21 +141,20 @@ class Go2RoughCfg( LeggedRobotCfg ):
         resized = (87, 58)
         buffer_len = 2
         
-        # realsense d435
-        # https://www.intel.com/content/www/us/en/products/sku/128255/intel-realsense-depth-camera-d435/specifications.html
-        # horizontal_fov = 85.2
-        horizontal_fov = [83.2, 87.2]
+        # realsense d435f
+        # https://store.realsenseai.com/buy-intel-realsense-depth-camera-d435f.html
+        horizontal_fov = [85, 89]
         # this is from original image size
         left_right_clip = 20
         bottom_clip = 2
-        near_clip = 0.3
+        near_clip = 0.15
         far_clip = 3.0
-        dis_noise = 0.05
+        dis_noise = 0.025
         
         scale = 1
         invert = True
 
-        artifact_prob = 0.0025
+        artifact_prob = 0.001
         artifact_height_mean_std = (3, 3)
         artifact_width_mean_std = (3, 3)
     
