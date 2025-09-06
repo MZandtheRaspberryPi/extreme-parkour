@@ -22,18 +22,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.107" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/base.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
@@ -135,18 +123,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.000596" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/hip.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
@@ -190,18 +166,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.00103" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/thigh.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
@@ -245,18 +209,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="3.29E-05" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/calf.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
@@ -344,18 +296,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="9.6e-06" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/foot.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.002 0 0" />
@@ -394,18 +334,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.000596" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="3.1415 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/hip.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
@@ -449,18 +377,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.00103" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/thigh.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
@@ -504,18 +420,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="3.29E-05" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/calf_mirror.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
@@ -603,18 +507,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="9.6e-06" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/foot.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.002 0 0" />
@@ -653,18 +545,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.000596" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 3.1415 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/hip.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
@@ -708,18 +588,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.00103" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/thigh.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
@@ -763,18 +631,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="3.29E-05" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/calf.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
@@ -862,18 +718,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="9.6e-06" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/foot.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.002 0 0" />
@@ -912,18 +756,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.000596" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="3.1415 3.1415 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/hip.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
@@ -967,18 +799,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.00103" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/thigh_mirror.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
@@ -1022,18 +842,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="3.29E-05" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/calf_mirror.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
@@ -1121,18 +929,6 @@ Stephen Brawner (brawner@gmail.com)
         izz="9.6e-06" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="../meshes/foot.dae" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.002 0 0" />

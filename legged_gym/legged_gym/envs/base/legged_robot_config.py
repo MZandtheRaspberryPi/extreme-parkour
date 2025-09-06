@@ -384,7 +384,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         lam = 0.95
         desired_kl = 0.01
         max_grad_norm = 1.
-        logstd_init = 0.5
+        logstd_init = 0.0
         enable_vids = True
         num_envs_to_video = 5
         vid_step_interval = 500
