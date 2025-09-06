@@ -386,7 +386,8 @@ class LeggedRobotCfgPPO(BaseConfig):
         max_grad_norm = 1.
         logstd_init = 0.5
         enable_vids = True
-        num_envs_to_video = 4
+        num_envs_to_video = 5
+        vid_step_interval = 500
         # dagger params
         dagger_update_freq = 20
         priv_reg_coef_schedual = [0, 0.1, 2000, 3000]

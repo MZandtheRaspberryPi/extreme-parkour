@@ -32,6 +32,8 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 
 class A1ParkourCfg( LeggedRobotCfg ):
+    class debug:
+        render_vis = True
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
@@ -66,6 +68,51 @@ class A1ParkourCfg( LeggedRobotCfg ):
         penalize_contacts_on = ["thigh", "calf", "base"]
         terminate_after_contacts_on = ["base"]#, "thigh", "calf"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+
+        joint_limits_low = { # 12 joints in the order of simulation
+            "FL_hip_joint": -1.0472,
+            "FL_thigh_joint": -1.5708,
+            "FL_calf_joint": -2.7227,
+            "FR_hip_joint": -1.0472,
+            "FR_thigh_joint": -1.5708,
+            "FR_calf_joint": -2.7227,
+            "RL_hip_joint": -1.0472,
+            "RL_thigh_joint": -0.5236,
+            "RL_calf_joint": -2.7227,
+            "RR_hip_joint": -1.0472,
+            "RR_thigh_joint": -0.5236,
+            "RR_calf_joint": -2.7227,
+        }
+
+        joint_limits_high = { # 12 joints in the order of simulation
+            "FL_hip_joint": 1.0472,
+            "FL_thigh_joint": 3.4907,
+            "FL_calf_joint": -0.83776,
+            "FR_hip_joint": 1.0472,
+            "FR_thigh_joint": 3.4907,
+            "FR_calf_joint": -0.83776,
+            "RL_hip_joint": 1.0472,
+            "RL_thigh_joint": 4.5379,
+            "RL_calf_joint": -0.83776,
+            "RR_hip_joint": 1.0472,
+            "RR_thigh_joint": 4.5379,
+            "RR_calf_joint": -0.83776,
+        }
+
+        torque_limits = {
+            "FL_hip_joint": 25,
+            "FL_thigh_joint": 40,
+            "FL_calf_joint": 40,
+            "FR_hip_joint": 25,
+            "FR_thigh_joint": 40,
+            "FR_calf_joint": 40,
+            "RL_hip_joint": 25,
+            "RL_thigh_joint": 40,
+            "RL_calf_joint": 40,
+            "RR_hip_joint": 25,
+            "RR_thigh_joint": 40,
+            "RR_calf_joint": 40,
+        }
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9

@@ -58,14 +58,14 @@ Stephen Brawner (brawner@gmail.com)
         iyz="0"
         izz="9.6e-06" />
     </inertial>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <cylinder radius="0.05" length="0.09" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="Head_upper_joint"
@@ -148,12 +148,12 @@ Stephen Brawner (brawner@gmail.com)
           rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
       <geometry>
         <cylinder length="0.04" radius="0.046" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FL_hip_joint"
@@ -259,9 +259,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.21 0" xyz="0.008 0 -0.06" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
       <geometry>
-        <cylinder length="0.12" radius="0.012" />
+        <cylinder length="0.155" radius="0.010" />
       </geometry>
     </collision>
   </link>
@@ -285,12 +285,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="FL_calflower">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.065" radius="0.011" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FL_calflower_joint"
@@ -307,12 +307,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="FL_calflower1">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.03" radius="0.0155" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FL_calflower1_joint"
@@ -407,12 +407,12 @@ Stephen Brawner (brawner@gmail.com)
           rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
       <geometry>
         <cylinder length="0.04" radius="0.046" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FR_hip_joint"
@@ -449,12 +449,9 @@ Stephen Brawner (brawner@gmail.com)
         izz="0.00103" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+      <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
       <geometry>
-        <mesh
-          filename="../meshes/thigh_mirror.dae" />
+        <box size="0.213 0.0245 0.034" />
       </geometry>
       <material
         name="">
@@ -518,9 +515,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <cylinder length="0.155" radius="0.010" />
       </geometry>
     </collision>
   </link>
@@ -544,12 +541,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="FR_calflower">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.065" radius="0.011" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FR_calflower_joint"
@@ -566,12 +563,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="FR_calflower1">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.03" radius="0.0155" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="FR_calflower1_joint"
@@ -603,12 +600,9 @@ Stephen Brawner (brawner@gmail.com)
         izz="9.6e-06" />
     </inertial>
     <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+      <origin rpy="0 0 0" xyz="-0.002 0 0" />
       <geometry>
-        <mesh
-          filename="../meshes/foot.dae" />
+        <sphere radius="0.022" />
       </geometry>
       <material
         name="">
@@ -666,12 +660,12 @@ Stephen Brawner (brawner@gmail.com)
           rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
       <geometry>
         <cylinder length="0.04" radius="0.046" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RL_hip_joint"
@@ -777,9 +771,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <cylinder length="0.155" radius="0.010" />
       </geometry>
     </collision>
   </link>
@@ -803,12 +797,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="RL_calflower">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.065" radius="0.011" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RL_calflower_joint"
@@ -825,12 +819,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="RL_calflower1">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.03" radius="0.0155" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RL_calflower1_joint"
@@ -925,12 +919,12 @@ Stephen Brawner (brawner@gmail.com)
           rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
       <geometry>
         <cylinder length="0.04" radius="0.046" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RR_hip_joint"
@@ -1036,9 +1030,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <cylinder length="0.155" radius="0.010" />
       </geometry>
     </collision>
   </link>
@@ -1062,12 +1056,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="RR_calflower">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.065" radius="0.011" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RR_calflower_joint"
@@ -1084,12 +1078,12 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link
     name="RR_calflower1">
-    <collision>
+    <!-- <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <cylinder length="0.03" radius="0.0155" />
       </geometry>
-    </collision>
+    </collision> -->
   </link>
   <joint
     name="RR_calflower1_joint"

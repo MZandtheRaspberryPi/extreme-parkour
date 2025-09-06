@@ -1165,6 +1165,7 @@ class LeggedRobot(BaseTask):
         self.num_bodies = len(body_names)
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
+        print(f"num_bodies: { self.num_bodies}")
 
         print(f"body names: {body_names}")
         print(f"feet_names names: {feet_names}")
