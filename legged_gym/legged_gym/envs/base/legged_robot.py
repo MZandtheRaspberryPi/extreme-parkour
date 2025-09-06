@@ -388,8 +388,8 @@ class LeggedRobot(BaseTask):
         self.last_contacts = contact
         
         # self._update_jump_schedule()
-        if self.cfg.terrain.curriculum:
-            self._update_goals()
+        # if self.cfg.terrain.curriculum:
+        self._update_goals()
         self._post_physics_step_callback()
 
         # compute observations, rewards, resets, ...
@@ -575,7 +575,7 @@ class LeggedRobot(BaseTask):
         """
         imu_obs = torch.stack((self.roll, self.pitch), dim=1)
 
-        if self.global_counter % 5 == 0:
+        if self.global_counter % self.cfg.depth.update_interval == 0:
             self.delta_yaw = self.target_yaw - self.yaw
             self.delta_next_yaw = self.next_target_yaw - self.yaw
 
