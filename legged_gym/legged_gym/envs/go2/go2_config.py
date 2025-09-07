@@ -128,15 +128,15 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        # position_min = [0.335, 0, 0.125]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
-        # position_max = [0.355, 0, 0.135]  # front camera
-        position_min = [0.345, 0, 0.13]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
-        position_max = [0.345, 0, 0.13]  # front camera
+        position_min = [0.335, 0, 0.125]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        position_max = [0.355, 0, 0.135]  # front camera
+        # position_min = [0.345, 0, 0.13]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        # position_max = [0.345, 0, 0.13]  # front camera
         # degrees, euler
-        # angle_min = [-1, 21.2, 0.0]
-        # angle_max = [1, 24.6, 0.0]
-        angle_min = [0.0, 23.0, 0.0]
-        angle_max = [0.0, 23.0, 0.0]
+        angle_min = [-1, 21.2, 0.0]
+        angle_max = [1, 24.6, 0.0]
+        # angle_min = [0.0, 23.0, 0.0]
+        # angle_max = [0.0, 23.0, 0.0]
 
         # we do 15 fps in reality, if we run policy at 50hz, for each 3.33 steps in sim per update ((1/15)/(1/50))
         update_interval = 4  # 5 works without retraining, 8 worse
@@ -147,8 +147,8 @@ class Go2RoughCfg( LeggedRobotCfg ):
         
         # realsense d435f
         # https://store.realsenseai.com/buy-intel-realsense-depth-camera-d435f.html, FOV 87
-        # horizontal_fov = [85, 89]
-        horizontal_fov = [87, 87]
+        horizontal_fov = [85, 89]
+        # horizontal_fov = [87, 87]
         # this is from original image size
         # left_right_clip = 20
         left_right_clip = 15
@@ -156,14 +156,14 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # near_clip = 0.15
         near_clip = 0.0
         far_clip = 3.0
-        # dis_noise = 0.025
-        dis_noise = 0.00
+        dis_noise = 0.025
+        # dis_noise = 0.00
         
         scale = 1
         invert = True
 
-        # artifact_prob = 0.001
-        artifact_prob = 0.00
+        artifact_prob = 0.001
+        # artifact_prob = 0.00
         artifact_height_mean_std = (3, 3)
         artifact_width_mean_std = (3, 3)
     
