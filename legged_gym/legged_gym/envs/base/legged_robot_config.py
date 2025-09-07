@@ -35,7 +35,7 @@ from .base_config import BaseConfig
 import torch.nn as nn
 class LeggedRobotCfg(BaseConfig):
     class debug:
-        render_vis = False
+        render_vis = True
     class play:
         load_student_config = False
         mask_priv_obs = False
@@ -386,7 +386,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         desired_kl = 0.01
         max_grad_norm = 1.
         logstd_init = 0.0
-        enable_vids = False
+        enable_vids = True
         num_envs_to_video = 5
         vid_step_interval = 500
         do_encoding_tricks = True
