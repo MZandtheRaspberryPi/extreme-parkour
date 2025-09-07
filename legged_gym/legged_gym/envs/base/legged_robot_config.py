@@ -296,7 +296,7 @@ class LeggedRobotCfg(BaseConfig):
             tracking_yaw = 0.5
             # regularization rewards
             # yaw = -1.0
-            lin_vel_z = -1.5
+            lin_vel_z = -1.0
             ang_vel_xy = -0.05
             # tracking_lin_vel = 1.0
             # ang_vel_xy_tracking = 1.0
@@ -386,7 +386,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         desired_kl = 0.01
         max_grad_norm = 1.
         logstd_init = 0.0
-        enable_vids = True
+        enable_vids = False
         num_envs_to_video = 5
         vid_step_interval = 500
         do_encoding_tricks = True

@@ -59,8 +59,10 @@ class TaskRegistry():
         return self.task_classes[name]
     
     def get_cfgs(self, name) -> Tuple[LeggedRobotCfg, LeggedRobotCfgPPO]:
+        print(f"getting name {name}")
         train_cfg = self.train_cfgs[name]
         env_cfg = self.env_cfgs[name]
+        print(f"name has this rows: {env_cfg.terrain.num_rows}")
         # copy seed
         env_cfg.seed = train_cfg.seed
         return env_cfg, train_cfg
@@ -96,7 +98,9 @@ class TaskRegistry():
             # load config files
             env_cfg, _ = self.get_cfgs(name)
         # override cfg from args (if specified)
+        print(f"env cfg b/f override: {env_cfg.terrain.num_rows}")
         env_cfg, _ = update_cfg_from_args(env_cfg, None, args)
+        print(f"env cfg after override: {env_cfg.terrain.num_rows}")
         print("env cfg", flush=True)
         print(class_to_dict(env_cfg), flush=True)
         set_seed(env_cfg.seed)
