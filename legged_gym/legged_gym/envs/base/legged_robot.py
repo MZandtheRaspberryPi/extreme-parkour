@@ -555,9 +555,15 @@ class LeggedRobot(BaseTask):
         self.contact_filt_end_idx = 48
 
         self.priv_obs_lin_vel_start_idx = 48
-        self.priv_obs_lin_vel_end_idx = 52
-        self.priv_obs_target_yaw_start_idx = 52
-        self.priv_obs_target_yaw_end_idx = 54
+        self.priv_obs_lin_vel_end_idx = 51
+        self.priv_obs_target_yaw_start_idx = 51
+        self.priv_obs_target_yaw_end_idx = 53
+        self.priv_obs_mass_params_start_idx = 53
+        self.priv_obs_mass_params_end_idx = 57
+        self.priv_obs_friction_coeffs_start_idx = 57
+        self.priv_obs_friction_coeffs_end_idx = 58
+        self.priv_obs_motor_strength_start_idx = 58
+        self.priv_obs_motor_strength_end_idx = 82
 
         # ang vel
         noise_vec[self.ang_vel_start_idx:self.ang_vel_end_idx] = self.cfg.noise.noise_scales.ang_vel
@@ -593,7 +599,10 @@ class LeggedRobot(BaseTask):
 
         if self.cfg.env.num_privileged_obs is not None:
             priv_obs_buf = torch.cat((obs_buf, self.base_lin_vel, self.delta_yaw[:, None],
-                                      self.delta_next_yaw[:, None],), dim=-1)
+                                      self.delta_next_yaw[:, None], self.mass_params_tensor,
+                                    self.friction_coeffs_tensor,
+                                    self.motor_strength[0] - 1, 
+                                    self.motor_strength[1] - 1), dim=-1)
 
         if self.cfg.noise.add_noise and self.global_counter >= self.cfg.noise.global_steps_delay:
             obs_buf += torch.randn(obs_buf.shape, device=self.device) * self._noise_vector
@@ -1170,6 +1179,7 @@ class LeggedRobot(BaseTask):
         print(f"body names: {body_names}")
         print(f"feet_names names: {feet_names}")
 
+
         for s in feet_names:
             feet_idx = self.gym.find_asset_rigid_body_index(robot_asset, s)
             sensor_pose = gymapi.Transform(gymapi.Vec3(0.0, 0.0, 0.0))
@@ -1221,7 +1231,6 @@ class LeggedRobot(BaseTask):
 
             self.mass_params_tensor[i, :] = torch.from_numpy(mass_params).to(self.device).to(torch.float)
 
-        print(f"mass params tensor 0: {self.mass_params_tensor[0, :]}")
         if self.cfg.domain_rand.randomize_friction:
             self.friction_coeffs_tensor = self.friction_coeffs.to(self.device).to(torch.float).squeeze(-1)
 
