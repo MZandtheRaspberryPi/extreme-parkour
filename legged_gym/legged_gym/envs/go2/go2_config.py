@@ -125,9 +125,11 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        position_min = [0.335, 0, 0.125]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
-        position_max = [0.355, 0, 0.135]  # front camera
-        # position_min = [0.345, 0, 0.13]  # front camera 93.46mm + 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        # position_min = [0.23088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        # position_max = [0.25088, 0, 0.135]  # front camera
+        position_min = [0.27088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        position_max = [0.29088, 0, 0.135]  # front camera
+        # position_min = [0.345, 0, 0.13]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
         # position_max = [0.345, 0, 0.13]  # front camera
         # degrees, euler
         angle_min = [-1, 21.2, 0.0]
@@ -149,13 +151,13 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # this is from original image size
         left_clip = 20
         right_clip = 5
-        bottom_clip = 2
+        bottom_clip = 64//4
         near_clip = 0.15
         far_clip = 3.0
         dis_noise = 0.0
         # dis_noise = 0.00
         gaussian_blur_kernel = 3
-        gaussian_blur_sigma = sigma=(0.1, 2.0)
+        gaussian_blur_sigma =(0.1, 2.0)
         
         scale = 1
         invert = True
@@ -164,7 +166,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         artifact_height_mean_std = (3, 3)
         artifact_width_mean_std = (3, 3)
 
-        contour_detection_kernel_size = 9
+        contour_detection_kernel_size = 3
         contour_threshold = 1.0
     
     class noise:
