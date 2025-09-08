@@ -402,6 +402,8 @@ class LeggedRobotCfgPPO(BaseConfig):
         moe_gate_on_scan_depth = True
 
         delta_yaw_thresh = 0.6
+
+        past_obs_for_depth_encoder = 2
     
     class depth_encoder:
         if_depth = LeggedRobotCfg.depth.use_camera
