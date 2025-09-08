@@ -35,7 +35,7 @@ from .base_config import BaseConfig
 import torch.nn as nn
 class LeggedRobotCfg(BaseConfig):
     class debug:
-        render_vis = True
+        render_vis = False
     class play:
         load_student_config = False
         mask_priv_obs = False
@@ -386,7 +386,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         desired_kl = 0.01
         max_grad_norm = 1.
         logstd_init = 0.0
-        enable_vids = True
+        enable_vids = False
         num_envs_to_video = 5
         vid_step_interval = 500
         do_encoding_tricks = True
@@ -394,6 +394,13 @@ class LeggedRobotCfgPPO(BaseConfig):
         dagger_update_freq = 20
         priv_reg_coef_schedual = [0, 0.1, 2000, 3000]
         priv_reg_coef_schedual_resume = [0, 0.1, 0, 1]
+
+        moe_hidden_layer_dims = [256, 128]
+        moe_n_experts = 3
+        moe_top_k = 2
+        moe_loss_coeff = 0.1
+
+        delta_yaw_thresh = 0.6
     
     class depth_encoder:
         if_depth = LeggedRobotCfg.depth.use_camera
