@@ -100,6 +100,31 @@ class LeggedRobot(BaseTask):
 
         self.resize_transform = torchvision.transforms.Resize((self.cfg.depth.resized[1], self.cfg.depth.resized[0]), 
                                                               interpolation=torchvision.transforms.InterpolationMode.BICUBIC)
+        self.gaussian_blur_transform = torchvision.transforms.GaussianBlur(self.cfg.depth.gaussian_blur_kernel, sigma=self.cfg.depth.gaussian_blur_sigma)
+
+        self.contour_detection_kernel = torch.zeros(
+                (8, 1, 3, 3),
+                dtype= torch.float32,
+                device= self.device,
+            )
+
+        # emperical values to be more sensitive to vertical edges
+        self.contour_detection_kernel[0, :, 1, 1] = 0.5
+        self.contour_detection_kernel[0, :, 0, 0] = -0.5
+        self.contour_detection_kernel[1, :, 1, 1] = 0.1
+        self.contour_detection_kernel[1, :, 0, 1] = -0.1
+        self.contour_detection_kernel[2, :, 1, 1] = 0.5
+        self.contour_detection_kernel[2, :, 0, 2] = -0.5
+        self.contour_detection_kernel[3, :, 1, 1] = 1.2
+        self.contour_detection_kernel[3, :, 1, 0] = -1.2
+        self.contour_detection_kernel[4, :, 1, 1] = 1.2
+        self.contour_detection_kernel[4, :, 1, 2] = -1.2
+        self.contour_detection_kernel[5, :, 1, 1] = 0.5
+        self.contour_detection_kernel[5, :, 2, 0] = -0.5
+        self.contour_detection_kernel[6, :, 1, 1] = 0.1
+        self.contour_detection_kernel[6, :, 2, 1] = -0.1
+        self.contour_detection_kernel[7, :, 1, 1] = 0.5
+        self.contour_detection_kernel[7, :, 2, 2] = -0.5
         
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
@@ -168,12 +193,16 @@ class LeggedRobot(BaseTask):
         # reverse negative image, only in sim
         # we do get infinities, so account for that
         depth_image = depth_image * -1
-        depth_image = torch.clip(depth_image, self.cfg.depth.near_clip, self.cfg.depth.far_clip)
+        # set everything below near clip to max
+        depth_image = torch.where(depth_image < self.cfg.depth.near_clip, self.cfg.depth.far_clip, depth_image)
+        depth_image = torch.where(depth_image > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_image)
+        depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
         depth_image = self.crop_depth_image(depth_image)
         depth_image = self._add_depth_artifacts(depth_image, self.cfg.depth.artifact_prob,
             self.cfg.depth.artifact_height_mean_std, self.cfg.depth.artifact_width_mean_std)
-        depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
+        depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
+        # depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
         depth_image = self.normalize_depth_image(depth_image)
         return depth_image
 
@@ -214,7 +243,24 @@ class LeggedRobot(BaseTask):
             0, 1,
         )
 
-        return artifacts
+        return artifacts.bool()
+
+
+    def _add_depth_contour(self, depth_images):
+        gradients = F.max_pool2d(
+            torch.abs(F.conv2d(depth_images, self.contour_detection_kernel, padding= 1)).max(dim= -3, keepdim= True)[0],
+            kernel_size= self.cfg.depth.contour_detection_kernel_size,
+            stride= 1,
+            padding= int(self.cfg.depth.contour_detection_kernel_size / 2),
+        )
+        # print(f"max gradient contour: {torch.max(gradients)}")
+        # print(f"min gradient contour: {torch.min(gradients)}")
+        # print(f"mean gradient contour: {torch.mean(gradients)}")
+        # print(f"90 quantile: {torch.quantile(gradients, 0.9)}")
+        mask = gradients > self.cfg.depth.contour_threshold
+        depth_images[mask] = self.cfg.depth.far_clip
+        return depth_images
+
 
     def _add_depth_artifacts(self, depth_image, artifacts_prob, artifacts_height_mean_std, artifacts_width_mean_std):
 
@@ -253,8 +299,6 @@ class LeggedRobot(BaseTask):
             ),
         )
 
-        # so we have nx1 for 
-
         artifacts_top_left = (
             _clip(artifacts_coord[:, 0] - artifacts_size[0] / 2, 0),
             _clip(artifacts_coord[:, 1] - artifacts_size[1] / 2, 1),
@@ -271,15 +315,12 @@ class LeggedRobot(BaseTask):
                 artifacts_top_left[1],
                 artifacts_bottom_right[1],
             )
-
-
-        depth_image *= (1 - art_mask) # torch.where(new_mask, self.cfg.depth.far_clip, depth_image)
-
+        depth_image[art_mask] = self.cfg.depth.far_clip
         return depth_image
 
 
     def crop_depth_image(self, depth_image):
-        return depth_image[:-self.cfg.depth.bottom_clip, self.cfg.depth.left_right_clip:-self.cfg.depth.left_right_clip]
+        return depth_image[:-self.cfg.depth.bottom_clip, self.cfg.depth.left_clip:-self.cfg.depth.right_clip]
 
     def update_depth_buffer(self):
         if not self.cfg.depth.use_camera:

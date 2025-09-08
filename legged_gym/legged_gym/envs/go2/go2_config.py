@@ -147,22 +147,25 @@ class Go2RoughCfg( LeggedRobotCfg ):
         horizontal_fov = [85, 89]
         # horizontal_fov = [87, 87]
         # this is from original image size
-        # left_right_clip = 20
-        left_right_clip = 15
+        left_clip = 20
+        right_clip = 5
         bottom_clip = 2
-        # near_clip = 0.15
-        near_clip = 0.0
+        near_clip = 0.15
         far_clip = 3.0
-        dis_noise = 0.025
+        dis_noise = 0.0
         # dis_noise = 0.00
+        gaussian_blur_kernel = 3
+        gaussian_blur_sigma = sigma=(0.1, 2.0)
         
         scale = 1
         invert = True
 
         artifact_prob = 0.001
-        # artifact_prob = 0.00
         artifact_height_mean_std = (3, 3)
         artifact_width_mean_std = (3, 3)
+
+        contour_detection_kernel_size = 9
+        contour_threshold = 1.0
     
     class noise:
         add_noise = True
