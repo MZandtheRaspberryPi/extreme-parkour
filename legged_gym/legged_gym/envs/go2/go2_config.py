@@ -127,8 +127,8 @@ class Go2RoughCfg( LeggedRobotCfg ):
 
         # position_min = [0.23088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
         # position_max = [0.25088, 0, 0.135]  # front camera
-        position_min = [0.27088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
-        position_max = [0.29088, 0, 0.135]  # front camera
+        position_min = [0.28, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        position_max = [0.30, 0, 0.135]  # front camera
         # position_min = [0.345, 0, 0.13]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
         # position_max = [0.345, 0, 0.13]  # front camera
         # degrees, euler
