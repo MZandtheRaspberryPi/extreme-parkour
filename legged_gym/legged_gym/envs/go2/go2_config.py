@@ -168,6 +168,8 @@ class Go2RoughCfg( LeggedRobotCfg ):
 
         contour_detection_kernel_size = 3
         contour_threshold = 1.0
+
+        iterations_step_with_teacher_before_student = 50
     
     class noise:
         add_noise = True
