@@ -1160,12 +1160,14 @@ class LeggedRobot(BaseTask):
             
             local_transform = gymapi.Transform()
 
-            pos = []
+            p_x = np.random.normal(config.position["mean"][0], config.position["std"][0])
+            p_y = np.random.normal(config.position["mean"][1], config.position["std"][1])
+            p_z = np.random.normal(config.position["mean"][2], config.position["std"][2])
+
+            pos = [p_x, p_y, p_z]
             ang = []
             for i in range(3):
-                p = np.random.uniform(config.position_min[i], config.position_max[i])
                 a = np.random.uniform(config.angle_min[i], config.angle_max[i])
-                pos.append(p)
                 ang.append(np.radians(a))
                         
             local_transform.p = gymapi.Vec3(*pos)

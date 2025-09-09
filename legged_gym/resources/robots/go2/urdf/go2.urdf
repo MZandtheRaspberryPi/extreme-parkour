@@ -454,7 +454,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/thigh.dae" />
+          filename="../meshes/thigh_mirror.dae" />
       </geometry>
       <material
         name="">

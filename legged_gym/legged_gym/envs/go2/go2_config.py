@@ -125,15 +125,20 @@ class Go2RoughCfg( LeggedRobotCfg ):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
+        # 14cm to middle of body? If height of cam is too low, object is too low
+
         # position_min = [0.23088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
         # position_max = [0.25088, 0, 0.135]  # front camera
-        position_min = [0.28, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
-        position_max = [0.30, 0, 0.135]  # front camera
+        # position_min = [0.28, 0, 0.14]  # front camera 70+150.88+(131.0÷2)   70mm from mount holes forward plus 150.88 to rail mount holes plus half of rail mount holes dist
+        # position_max = [0.30, 0, 0.15]  # front camera, 286.38 should be it
         # position_min = [0.345, 0, 0.13]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
         # position_max = [0.345, 0, 0.13]  # front camera
         # degrees, euler
-        angle_min = [-1, 21.2, 0.0]
-        angle_max = [1, 24.6, 0.0]
+
+        position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
+
+        angle_min = [-1, 21.2, -1.0]
+        angle_max = [1, 24.6, 1.0]
         # angle_min = [0.0, 23.0, 0.0]
         # angle_max = [0.0, 23.0, 0.0]
 
