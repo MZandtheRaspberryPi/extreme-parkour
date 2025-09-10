@@ -135,7 +135,8 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # position_max = [0.345, 0, 0.13]  # front camera
         # degrees, euler
 
-        position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
+        # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
+        position = dict(mean=[0.18638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
 
         angle_min = [-1, 21.2, -1.0]
         angle_max = [1, 24.6, 1.0]
