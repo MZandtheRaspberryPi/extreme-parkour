@@ -193,7 +193,8 @@ class LeggedRobot(BaseTask):
         # reverse negative image, only in sim
         # we do get infinities, so account for that
         depth_image = depth_image * -1
-        # set everything below near clip to max
+        # set everything below near clip to maxdepth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
+        depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
         depth_image = torch.where(depth_image < self.cfg.depth.near_clip, self.cfg.depth.far_clip, depth_image)
         depth_image = torch.where(depth_image > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_image)
         depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
@@ -202,7 +203,6 @@ class LeggedRobot(BaseTask):
             self.cfg.depth.artifact_height_mean_std, self.cfg.depth.artifact_width_mean_std)
         depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
-        # depth_image += self.cfg.depth.dis_noise * torch.randn(depth_image.shape, device=self.device)
         depth_image = self.normalize_depth_image(depth_image)
         return depth_image
 

@@ -106,10 +106,10 @@ class Go2RoughCfg( LeggedRobotCfg ):
 
   
     class rewards( LeggedRobotCfg.rewards ):
-        # class scales(LeggedRobotCfg.rewards.scales):
-        #     # exceed_dof_pos_limits = -0.4
-        #     exceed_torque_limits_l1norm = -0.4
-        #     dof_vel_limits = -0.4
+        class scales(LeggedRobotCfg.rewards.scales):
+            exceed_dof_pos_limits = -0.4
+            exceed_torque_limits_l1norm = -0.4
+            dof_vel_limits = -0.4
         soft_dof_vel_limit = 0.9
         soft_dof_pos_limit = 0.9
         soft_torque_limit = 0.9
@@ -136,7 +136,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # degrees, euler
 
         # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
-        position = dict(mean=[0.30, -0.0175, 0.15], std=[0.01, 0.0025, 0.02])
+        position = dict(mean=[0.32, -0.0175, 0.15], std=[0.01, 0.0025, 0.01])
 
         angle_min = [-1, 21.2, -1.0]
         angle_max = [1, 24.6, 1.0]
@@ -157,10 +157,11 @@ class Go2RoughCfg( LeggedRobotCfg ):
         # this is from original image size
         left_clip = 20
         right_clip = 5
-        bottom_clip = 64//4
+        # bottom_clip = 64 // 4
+        bottom_clip = 10
         near_clip = 0.15
         far_clip = 3.0
-        dis_noise = 0.0
+        dis_noise = 0.02
         # dis_noise = 0.00
         gaussian_blur_kernel = 3
         gaussian_blur_sigma =(0.1, 2.0)
@@ -175,7 +176,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         contour_detection_kernel_size = 3
         contour_threshold = 1.0
 
-        iterations_step_with_teacher_before_student = 50
+        iterations_step_with_teacher_before_student = 0
     
     class noise:
         add_noise = True
