@@ -398,7 +398,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         moe_hidden_layer_dims = [256, 128]
         moe_n_experts = 3
         moe_top_k = 2
-        moe_loss_coeff = 0.01
+        moe_loss_coeff = 0.0025
         moe_gate_on_scan_depth = True
         moe_noise_mat_init = -0.5
 
