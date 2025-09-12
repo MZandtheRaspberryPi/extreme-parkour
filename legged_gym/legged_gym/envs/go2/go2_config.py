@@ -192,8 +192,6 @@ class Go2RoughCfg( LeggedRobotCfg ):
     
 
 class Go2RoughCfgPPO( LeggedRobotCfgPPO ):
-    class algorithm( LeggedRobotCfgPPO.algorithm ):
-        entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'rough_go2'
