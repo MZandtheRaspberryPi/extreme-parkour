@@ -161,7 +161,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         bottom_clip = 10
         near_clip = 0.15
         far_clip = 3.0
-        dis_noise = 0.01
+        dis_noise = 0.002
         # dis_noise = 0.00
         gaussian_blur_kernel = 3
         gaussian_blur_sigma =(0.1, 2.0)
