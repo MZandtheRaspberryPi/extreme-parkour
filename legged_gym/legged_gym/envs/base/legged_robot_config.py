@@ -310,7 +310,7 @@ class LeggedRobotCfg(BaseConfig):
             delta_torques = -1.0e-7
             torques = -0.00001
             hip_pos = -0.5
-            dof_error = -0.01
+            dof_error = -0.02
             # feet_stumble = -1.0
             feet_edge = -1
             # feet_air_time = 1.0
