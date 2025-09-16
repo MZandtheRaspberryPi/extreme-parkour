@@ -403,6 +403,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         moe_noise_mat_init = -0.5
 
         delta_yaw_thresh = 0.6
+        use_many_params_std = False
 
         past_obs_for_depth_encoder = 2
     
