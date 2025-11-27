@@ -176,7 +176,7 @@ class Go2RoughCfg(LeggedRobotCfg):
 
         contour_detection_kernel_size = 3
         contour_threshold = 1.0
-        contour_nuke_prob = 0.05
+        contour_nuke_prob = 0.1
 
         iterations_step_with_teacher_before_student = 0
 
