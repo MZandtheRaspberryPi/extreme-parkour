@@ -777,9 +777,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.08" />
       <geometry>
-        <cylinder length="0.155" radius="0.010" />
+        <cylinder length="0.24" radius="0.010" />
       </geometry>
     </collision>
   </link>
@@ -1036,9 +1036,9 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.11" />
+      <origin rpy="0 -0.1 0" xyz="0.008 0 -0.08" />
       <geometry>
-        <cylinder length="0.155" radius="0.010" />
+        <cylinder length="0.24" radius="0.010" />
       </geometry>
     </collision>
   </link>
