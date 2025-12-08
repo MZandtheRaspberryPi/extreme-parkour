@@ -44,7 +44,7 @@ class LeggedRobotCfg(BaseConfig):
         mask_priv_obs = False
 
     class env:
-        num_envs = 5250
+        num_envs = 12000
 
         n_scan = 132
         n_priv = 3 + 3 + 3
@@ -391,10 +391,8 @@ class LeggedRobotCfg(BaseConfig):
             rest_offset = 0.0  # [m]
             bounce_threshold_velocity = 0.5  # 0.5 [m/s]
             max_depenetration_velocity = 1.0
-            max_gpu_contact_pairs = (
-                2**23
-            )  # 2**24 -> needed for 8000 envs and more, or for go2 2**25 6000 envs
-            default_buffer_size_multiplier = 5  # 7 for go2 6000 envs
+            max_gpu_contact_pairs = 2**24
+            default_buffer_size_multiplier = 6
             contact_collection = (
                 2  # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
             )
