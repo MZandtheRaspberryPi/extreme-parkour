@@ -425,7 +425,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         use_clipped_value_loss = True
         clip_param = 0.2
         entropy_coef = (
-            0.008  # with 0.01 sometimes policy learns to blow up entropy loss
+            0.008  # with 0.01 sometimexs policy learns to blow up entropy loss
         )
         num_learning_epochs = 5
         num_mini_batches = 2  # mini batch size = num_envs*nsteps / nminibatches
@@ -458,6 +458,9 @@ class LeggedRobotCfgPPO(BaseConfig):
         use_many_params_std = False
 
         past_obs_for_depth_encoder = 2
+
+        dropout = False
+        dropout_prob = 0.2
 
     class depth_encoder:
         if_depth = LeggedRobotCfg.depth.use_camera
