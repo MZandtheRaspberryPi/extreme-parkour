@@ -37,7 +37,7 @@ import torch.nn as nn
 
 class LeggedRobotCfg(BaseConfig):
     class debug:
-        render_vis = True
+        render_vis = False
 
     class play:
         load_student_config = False
@@ -436,7 +436,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         desired_kl = 0.01
         max_grad_norm = 1.0
         logstd_init = 0.0
-        enable_vids = True
+        enable_vids = False
         num_envs_to_video = 5
         vid_step_interval = 250
         do_encoding_tricks = True
@@ -451,6 +451,8 @@ class LeggedRobotCfgPPO(BaseConfig):
         moe_loss_coeff = 0.0025
         moe_gate_on_scan_depth = True
         moe_noise_mat_init = 0.0
+        gate_noise_with_x = False
+        moe_layer_idx = 1
 
         delta_yaw_thresh = 0.6
         use_many_params_std = False
