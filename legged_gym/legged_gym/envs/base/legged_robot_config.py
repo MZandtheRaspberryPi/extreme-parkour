@@ -428,7 +428,7 @@ class LeggedRobotCfgPPO(BaseConfig):
             0.008  # with 0.01 sometimes policy learns to blow up entropy loss
         )
         num_learning_epochs = 5
-        num_mini_batches = 4  # mini batch size = num_envs*nsteps / nminibatches
+        num_mini_batches = 2  # mini batch size = num_envs*nsteps / nminibatches
         learning_rate = 2.0e-4  # 5.e-4
         schedule = "adaptive"  # could be adaptive, fixed
         gamma = 0.99
