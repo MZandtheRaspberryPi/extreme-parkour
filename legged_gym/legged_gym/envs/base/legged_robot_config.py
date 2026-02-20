@@ -114,6 +114,7 @@ class LeggedRobotCfg(BaseConfig):
 
         scale = 1
         invert = True
+        do_depth_noise = True
 
     class normalization:
         class obs_scales:

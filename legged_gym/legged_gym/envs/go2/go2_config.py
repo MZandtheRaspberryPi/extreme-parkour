@@ -179,6 +179,7 @@ class Go2RoughCfg(LeggedRobotCfg):
         contour_nuke_prob = 0.1
 
         iterations_step_with_teacher_before_student = 0
+        do_depth_noise = True
 
     class noise:
         add_noise = True

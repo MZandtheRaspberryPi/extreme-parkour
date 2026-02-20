@@ -248,15 +248,18 @@ class LeggedRobot(BaseTask):
         depth_image = torch.where(
             depth_image > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_image
         )
-        depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
+
+        if self.cfg.depth.do_depth_noise:
+            depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
         depth_image = self.crop_depth_image(depth_image)
-        depth_image = self._add_depth_artifacts(
-            depth_image,
-            self.cfg.depth.artifact_prob,
-            self.cfg.depth.artifact_height_mean_std,
-            self.cfg.depth.artifact_width_mean_std,
-        )
-        depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
+        if self.cfg.depth.do_depth_noise:
+            depth_image = self._add_depth_artifacts(
+                depth_image,
+                self.cfg.depth.artifact_prob,
+                self.cfg.depth.artifact_height_mean_std,
+                self.cfg.depth.artifact_width_mean_std,
+            )
+            depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
         depth_image = self.normalize_depth_image(depth_image)
         return depth_image
