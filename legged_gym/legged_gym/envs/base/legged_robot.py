@@ -34,6 +34,8 @@ from warnings import WarningMessage
 import numpy as np
 import os
 
+import PIL
+
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
 
@@ -238,6 +240,19 @@ class LeggedRobot(BaseTask):
         # reverse negative image, only in sim
         # we do get infinities, so account for that
         depth_image = depth_image * -1
+
+        debug_img = False
+
+        if debug_img:
+
+            file_dir = "/home/gymuser"
+            # colored
+            colored_original_img = cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            )
+            im_pil = PIL.Image.fromarray(colored_original_img)
+            im_pil.save(os.path.join(file_dir, f"img_0_raw_{str(0).zfill(7)}.jpeg"))
+
         depth_image += self.cfg.depth.dis_noise * torch.randn(
             depth_image.shape, device=self.device
         )
@@ -249,9 +264,26 @@ class LeggedRobot(BaseTask):
             depth_image > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_image
         )
 
+        if debug_img:
+            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+            im_pil.save(os.path.join(file_dir, f"img_1_clipped_{str(0).zfill(7)}.jpeg"))
+
         if self.cfg.depth.do_depth_noise:
             depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
+        
+        if debug_img:
+            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+            im_pil.save(os.path.join(file_dir, f"img_2_depth_contour_{str(0).zfill(7)}.jpeg"))
         depth_image = self.crop_depth_image(depth_image)
+        if debug_img:
+            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+            im_pil.save(os.path.join(file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
         if self.cfg.depth.do_depth_noise:
             depth_image = self._add_depth_artifacts(
                 depth_image,
@@ -259,9 +291,29 @@ class LeggedRobot(BaseTask):
                 self.cfg.depth.artifact_height_mean_std,
                 self.cfg.depth.artifact_width_mean_std,
             )
+            if debug_img:
+                im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+                im_pil.save(os.path.join(file_dir, f"img_4_artifacts_{str(0).zfill(7)}.jpeg"))
             depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
+            if debug_img:
+                im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+                im_pil.save(os.path.join(file_dir, f"img_5_gaussian_blur_{str(0).zfill(7)}.jpeg"))
         depth_image = self.resize_transform(depth_image[None, :]).squeeze()
+        if debug_img:
+            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+            im_pil.save(os.path.join(file_dir, f"img_6_resized_{str(0).zfill(7)}.jpeg"))
         depth_image = self.normalize_depth_image(depth_image)
+        if debug_img:
+            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+            ))
+            im_pil.save(os.path.join(file_dir, f"img_7_norm_{str(0).zfill(7)}.jpeg"))
         return depth_image
 
     @torch.no_grad()
