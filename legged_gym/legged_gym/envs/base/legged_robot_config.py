@@ -446,11 +446,9 @@ class LeggedRobotCfgPPO(BaseConfig):
         priv_reg_coef_schedual = [0, 0.1, 2000, 3000]
         priv_reg_coef_schedual_resume = [0, 0.1, 0, 1]
 
-        moe_hidden_layer_dims = [128, 64]
-        moe_n_experts = 3
-        moe_top_k = 2
-        moe_loss_coeff = 0.0025
-        moe_gate_on_scan_depth = True
+        moe_n_experts = 16
+        moe_top_k = 4
+        moe_loss_coeff = 0.1
         moe_noise_mat_init = 0.0
         gate_noise_with_x = False
         moe_layer_idx = 1
