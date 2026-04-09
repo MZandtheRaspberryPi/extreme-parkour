@@ -145,6 +145,7 @@ class Terrain:
                 eval(terrain_type)(terrain, **self.cfg.terrain_kwargs)
             else:
                 terrain_type(terrain, **self.cfg.terrain_kwargs)
+            terrain.idx = 0
             self.add_terrain_to_map(terrain, i, j)
     
     def add_roughness(self, terrain, difficulty=1):

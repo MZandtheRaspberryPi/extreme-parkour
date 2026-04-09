@@ -68,13 +68,13 @@ class BaseTask():
         torch._C._jit_set_profiling_executor(False)
 
         # allocate buffers
-        self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float)
-        self.rew_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
-        self.reset_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
-        self.episode_length_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
-        self.time_out_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float, requires_grad=False)
+        self.rew_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float, requires_grad=False)
+        self.reset_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long, requires_grad=False)
+        self.episode_length_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.long, requires_grad=False)
+        self.time_out_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool, requires_grad=False)
         if self.num_privileged_obs is not None:
-            self.privileged_obs_buf = torch.zeros(self.num_envs, self.num_privileged_obs, device=self.device, dtype=torch.float)
+            self.privileged_obs_buf = torch.zeros(self.num_envs, self.num_privileged_obs, device=self.device, dtype=torch.float, requires_grad=False)
         else: 
             self.privileged_obs_buf = None
             # self.num_privileged_obs = self.num_obs
