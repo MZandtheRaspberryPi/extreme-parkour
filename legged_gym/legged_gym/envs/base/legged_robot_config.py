@@ -450,7 +450,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         moe_top_k = 4
         moe_loss_coeff = 0.1
         moe_noise_mat_init = 0.0
-        gate_noise_with_x = False
+        gate_noise_with_x = True
         moe_layer_idx = 1
 
         delta_yaw_thresh = 0.6
