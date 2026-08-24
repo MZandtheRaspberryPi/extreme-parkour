@@ -235,11 +235,11 @@ class LeggedRobot(BaseTask):
         return depth_image
 
     @torch.no_grad()
-    def process_depth_image(self, depth_image, env_id):
+    def process_depth_images(self, depth_images, env_id):
         # These operations are replicated on the hardware
         # reverse negative image, only in sim
         # we do get infinities, so account for that
-        depth_image = depth_image * -1
+        depth_images = depth_images * -1
 
         debug_img = False
 
@@ -248,40 +248,40 @@ class LeggedRobot(BaseTask):
             file_dir = "/home/gymuser"
             # colored
             colored_original_img = cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             )
             im_pil = PIL.Image.fromarray(colored_original_img)
             im_pil.save(os.path.join(file_dir, f"img_0_raw_{str(0).zfill(7)}.jpeg"))
 
-        depth_image += self.cfg.depth.dis_noise * torch.randn(
-            depth_image.shape, device=self.device
+        depth_images += self.cfg.depth.dis_noise * torch.randn(
+            depth_images.shape, device=self.device
         )
         # set everything below near clip to max
-        depth_image = torch.where(
-            depth_image < self.cfg.depth.near_clip, self.cfg.depth.far_clip, depth_image
+        depth_images = torch.where(
+            depth_images < self.cfg.depth.near_clip, self.cfg.depth.far_clip, depth_images
         )
-        depth_image = torch.where(
-            depth_image > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_image
+        depth_images = torch.where(
+            depth_images > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_images
         )
 
         if debug_img:
             im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
             im_pil.save(os.path.join(file_dir, f"img_1_clipped_{str(0).zfill(7)}.jpeg"))
 
         if self.cfg.depth.do_depth_noise:
-            depth_image = self._add_depth_contour(depth_image.unsqueeze(0)).squeeze()
+            depth_images = self._add_depth_contour(depth_images)
         
         if debug_img:
             im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
             im_pil.save(os.path.join(file_dir, f"img_2_depth_contour_{str(0).zfill(7)}.jpeg"))
-        depth_image = self.crop_depth_image(depth_image)
+        depth_images = self.crop_depth_images(depth_images)
         if debug_img:
             im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
             im_pil.save(os.path.join(file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
         if self.cfg.depth.do_depth_noise:
@@ -461,8 +461,8 @@ class LeggedRobot(BaseTask):
         depth_image[art_mask] = self.cfg.depth.far_clip
         return depth_image
 
-    def crop_depth_image(self, depth_image):
-        return depth_image[
+    def crop_depth_images(self, depth_images):
+        return depth_images[:, 
             : -self.cfg.depth.bottom_clip,
             self.cfg.depth.left_clip : -self.cfg.depth.right_clip,
         ]
@@ -478,11 +478,26 @@ class LeggedRobot(BaseTask):
         self.gym.render_all_camera_sensors(self.sim)
         self.gym.start_access_image_tensors(self.sim)
 
+
+        # self.cfg.depth.original[0]
+        # camera_props.height = self.cfg.depth.original[1]
+        # 160 x 120 # 1 or 4 or 8 depending on flt or not...
+        # if 250 envs...
+        # 
+
+
+        
+
         for i in range(self.num_envs):
             depth_image_ = self.gym.get_camera_image_gpu_tensor(
                 self.sim, self.envs[i], self.cam_handles[i], gymapi.IMAGE_DEPTH
             )
-            depth_image = gymtorch.wrap_tensor(depth_image_)
+            self.depth_working_buffer[i] = gymtorch.wrap_tensor(depth_image_)
+        
+        # do processing in batches...
+
+
+
 
             # if i == self.lookat_id:
             #     proc_img = depth_image.clone().detach().cpu().numpy()
@@ -1513,6 +1528,13 @@ class LeggedRobot(BaseTask):
                 self.cfg.depth.buffer_len,
                 self.cfg.depth.resized[1],
                 self.cfg.depth.resized[0],
+                requires_grad=False,
+            ).to(self.device)
+
+            self.depth_working_buffer = torch.zeros(
+                self.num_envs,
+                self.cfg.depth.original[1],
+                self.cfg.depth.original[0],
                 requires_grad=False,
             ).to(self.device)
 
