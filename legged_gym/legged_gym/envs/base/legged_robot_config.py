@@ -47,9 +47,10 @@ class LeggedRobotCfg(BaseConfig):
         num_envs = 12000
 
         n_scan = 132
-        n_priv = 3 + 3 + 3
+        n_priv = 3
         n_priv_latent = 4 + 1 + 12 + 12
-        n_proprio = 3 + 2 + 3 + 36 + 4
+        # angular vel, imu obs, cmd, joint data, foot contact
+        n_proprio = 3 + 2 + 1 + 36 + 4
         # same as proprio, + lin vel + target yaw + target next yaw + mass params + friction_coef + motor strengths
         n_proprio_priv = n_proprio + 3 + 2 + 4 + 1 + 24
         history_len = 10
@@ -456,7 +457,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         delta_yaw_thresh = 0.6
         use_many_params_std = False
 
-        past_obs_for_depth_encoder = 2
+        past_obs_for_depth_encoder = 0
 
         dropout = False
         dropout_prob = 0.2

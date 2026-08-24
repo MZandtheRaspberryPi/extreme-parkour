@@ -817,7 +817,7 @@ class LeggedRobot(BaseTask):
                 self.base_ang_vel,  # [1,3] 0, 1, 2
                 imu_obs,  # [1,2] 3, 4
                 self.commands[:, 0:1],  # 5
-                0.0 * self.commands[:, 1:3],  # 6, 7
+                # 0.0 * self.commands[:, 1:3],  # 6, 7
                 self.reindex(
                     (self.dof_pos - self.default_dof_pos_all)
                 ),  # 8-19 inclusive

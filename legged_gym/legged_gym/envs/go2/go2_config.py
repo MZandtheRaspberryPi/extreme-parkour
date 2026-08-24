@@ -137,10 +137,10 @@ class Go2RoughCfg(LeggedRobotCfg):
         # degrees, euler
 
         # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
-        position = dict(mean=[0.32, -0.0175, 0.15], std=[0.01, 0.0025, 0.02])
+        position = dict(mean=[0.32, -0.0175, 0.15], std=[0.0, 0.0, 0.0])
 
-        angle_min = [-1, 21.2, -1.0]
-        angle_max = [1, 24.6, 1.0]
+        angle_min = [0.0, 23.0, 0.0]
+        angle_max = [0.0, 23.0, 0.0]
         # angle_min = [0.0, 23.0, 0.0]
         # angle_max = [0.0, 23.0, 0.0]
 
@@ -165,7 +165,7 @@ class Go2RoughCfg(LeggedRobotCfg):
         dis_noise = 0.0
         # dis_noise = 0.00
         gaussian_blur_kernel = 3
-        gaussian_blur_sigma = (0.1, 2.0)
+        gaussian_blur_sigma = (2.0, 2.0)
 
         scale = 1
         invert = True
