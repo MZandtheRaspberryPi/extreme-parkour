@@ -82,6 +82,13 @@ def euler_from_quaternion(quat_angle):
 
     return roll_x, pitch_y, yaw_z  # in radians
 
+def proc_depth_to_vis(img):
+    np_img = img.cpu().numpy() + 0.5
+    im_pil = PIL.Image.fromarray(cv2.applyColorMap(
+                cv2.convertScaleAbs(np_img, alpha=30), cv2.COLORMAP_JET
+            ))
+    return im_pil
+
 
 class LeggedRobot(BaseTask):
     def __init__(
@@ -140,6 +147,9 @@ class LeggedRobot(BaseTask):
         self.contour_detection_kernel[7, :, 1, 1] = 0.5
         self.contour_detection_kernel[7, :, 2, 2] = -0.5
 
+        self.debug_img = False
+        self.debug_file_dir = "/home/gymuser/extreme-parkour-ours/debug_imgs"
+
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
         self._init_buffers()
@@ -151,6 +161,8 @@ class LeggedRobot(BaseTask):
 
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
         self.post_physics_step()
+
+        
 
     def step(self, actions):
         """Apply actions, simulate, call self.post_physics_step()
@@ -241,17 +253,9 @@ class LeggedRobot(BaseTask):
         # we do get infinities, so account for that
         depth_images = depth_images * -1
 
-        debug_img = False
-
-        if debug_img:
-
-            file_dir = "/home/gymuser"
-            # colored
-            colored_original_img = cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            )
-            im_pil = PIL.Image.fromarray(colored_original_img)
-            im_pil.save(os.path.join(file_dir, f"img_0_raw_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_0_raw_{str(0).zfill(7)}.jpeg"))
 
         depth_images += self.cfg.depth.dis_noise * torch.randn(
             depth_images.shape, device=self.device
@@ -264,26 +268,20 @@ class LeggedRobot(BaseTask):
             depth_images > self.cfg.depth.far_clip, self.cfg.depth.far_clip, depth_images
         )
 
-        if debug_img:
-            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-            im_pil.save(os.path.join(file_dir, f"img_1_clipped_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_1_clipped_{str(0).zfill(7)}.jpeg"))
 
         if self.cfg.depth.do_depth_noise:
             depth_images = self._add_depth_contour(depth_images)
         
-        if debug_img:
-            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-            im_pil.save(os.path.join(file_dir, f"img_2_depth_contour_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_2_depth_contour_{str(0).zfill(7)}.jpeg"))
         depth_images = self.crop_depth_images(depth_images)
-        if debug_img:
-            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-            im_pil.save(os.path.join(file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
         if self.cfg.depth.do_depth_noise:
             depth_images = self._add_depth_artifacts(
                 depth_images,
@@ -291,29 +289,21 @@ class LeggedRobot(BaseTask):
                 self.cfg.depth.artifact_height_mean_std,
                 self.cfg.depth.artifact_width_mean_std,
             )
-            if debug_img:
-                im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-                im_pil.save(os.path.join(file_dir, f"img_4_artifacts_{str(0).zfill(7)}.jpeg"))
+            if self.debug_img:
+                im_pil = proc_depth_to_vis(depth_images[env_id])
+                im_pil.save(os.path.join(self.debug_file_dir, f"img_4_artifacts_{str(0).zfill(7)}.jpeg"))
             depth_images = self.gaussian_blur_transform(depth_images)
-            if debug_img:
-                im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-                im_pil.save(os.path.join(file_dir, f"img_5_gaussian_blur_{str(0).zfill(7)}.jpeg"))
+            if self.debug_img:
+                im_pil = proc_depth_to_vis(depth_images[env_id])
+                im_pil.save(os.path.join(self.debug_file_dir, f"img_5_gaussian_blur_{str(0).zfill(7)}.jpeg"))
         depth_images = self.resize_transform(depth_images)
-        if debug_img:
-            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-            im_pil.save(os.path.join(file_dir, f"img_6_resized_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_6_resized_{str(0).zfill(7)}.jpeg"))
         depth_images = self.normalize_depth_images(depth_images)
-        if debug_img:
-            im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
-            ))
-            im_pil.save(os.path.join(file_dir, f"img_7_norm_{str(0).zfill(7)}.jpeg"))
+        if self.debug_img:
+            im_pil = proc_depth_to_vis(depth_images[env_id])
+            im_pil.save(os.path.join(self.debug_file_dir, f"img_7_norm_{str(0).zfill(7)}.jpeg"))
         return depth_images
 
     @torch.no_grad()
@@ -657,6 +647,10 @@ class LeggedRobot(BaseTask):
                     self.depth_buffer[self.lookat_id, -1].cpu().numpy() + 0.5,
                 )
                 cv2.waitKey(1)
+                if self.debug_img:
+                    im_pil = proc_depth_to_vis(self.depth_buffer[self.lookat_id, -1])
+                    im_pil.save(os.path.join(self.debug_file_dir, f"{self.asset_file}_cam_{str(self.episode_length_buf[self.lookat_id].cpu().item()).zfill(7)}.jpeg"))
+                
 
     def reindex_feet(self, vec):
         return vec
@@ -1734,6 +1728,7 @@ class LeggedRobot(BaseTask):
         asset_path = self.cfg.asset.file.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
         asset_root = os.path.dirname(asset_path)
         asset_file = os.path.basename(asset_path)
+        self.asset_file = asset_file
 
         asset_options = gymapi.AssetOptions()
         asset_options.default_dof_drive_mode = self.cfg.asset.default_dof_drive_mode

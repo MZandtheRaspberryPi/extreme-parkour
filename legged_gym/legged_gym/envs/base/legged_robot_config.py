@@ -99,23 +99,61 @@ class LeggedRobotCfg(BaseConfig):
         camera_terrain_num_rows = 10
         camera_terrain_num_cols = 20
 
-        position = [0.27, 0, 0.03]  # front camera
-        angle = [-5, 5]  # positive pitch down
+        # 14cm to middle of body? If height of cam is too low, object is too low
 
-        update_interval = 5  # 5 works without retraining, 8 worse
+        # position_min = [0.23088, 0, 0.125]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        # position_max = [0.25088, 0, 0.135]  # front camera
+        # position_min = [0.28, 0, 0.14]  # front camera 70+150.88+(131.0÷2)   70mm from mount holes forward plus 150.88 to rail mount holes plus half of rail mount holes dist
+        # position_max = [0.30, 0, 0.15]  # front camera, 286.38 should be it
+        # position_min = [0.345, 0, 0.13]  # front camera 150.88mm (from cad drawing to mount holes) + 4.5cm to middle of body + 4.5cm from mount holes to cam center = 334.34mm
+        # position_max = [0.345, 0, 0.13]  # front camera
+        # degrees, euler
 
-        original = (106, 60)
+        # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
+        position = dict(mean=[0.32, -0.0175, 0.15], std=[0.0, 0.0, 0.0])
+
+        angle_min = [0.0, 23.0, 0.0]
+        angle_max = [0.0, 23.0, 0.0]
+        # angle_min = [0.0, 23.0, 0.0]
+        # angle_max = [0.0, 23.0, 0.0]
+
+        # we do 15 fps in reality, if we run policy at 50hz, for each 3.33 steps in sim per update ((1/15)/(1/50))
+        update_interval = 4  # 5 works without retraining, 8 worse
+
+        original = (int(640 / 4), int(480 / 4))
         resized = (87, 58)
-        horizontal_fov = 87
         buffer_len = 2
 
-        near_clip = 0
-        far_clip = 2
+        # realsense d435f
+        # https://store.realsenseai.com/buy-intel-realsense-depth-camera-d435f.html, FOV 87
+        horizontal_fov = [87, 87]
+        # horizontal_fov = [87, 87]
+        # this is from original image size
+        left_clip = 20
+        right_clip = 5
+        # bottom_clip = 64 // 4
+        bottom_clip = 16
+        near_clip = 0.15
+        far_clip = 3.0
         dis_noise = 0.0
+        # dis_noise = 0.00
+        gaussian_blur_kernel = 3
+        gaussian_blur_sigma = (2.0, 2.0)
 
         scale = 1
         invert = True
+
+        artifact_prob = 0.001
+        artifact_height_mean_std = (1, 1)
+        artifact_width_mean_std = (3, 3)
+
+        contour_detection_kernel_size = 1
+        contour_threshold = 0.5
+        contour_nuke_prob = 0.2
+
+        iterations_step_with_teacher_before_student = 0
         do_depth_noise = True
+
 
     class normalization:
         class obs_scales:

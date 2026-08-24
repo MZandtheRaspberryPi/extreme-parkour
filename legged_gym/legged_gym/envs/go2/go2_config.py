@@ -153,7 +153,7 @@ class Go2RoughCfg(LeggedRobotCfg):
 
         # realsense d435f
         # https://store.realsenseai.com/buy-intel-realsense-depth-camera-d435f.html, FOV 87
-        horizontal_fov = [85, 89]
+        horizontal_fov = [87, 87]
         # horizontal_fov = [87, 87]
         # this is from original image size
         left_clip = 20
