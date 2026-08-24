@@ -285,7 +285,7 @@ class LeggedRobot(BaseTask):
             ))
             im_pil.save(os.path.join(file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
         if self.cfg.depth.do_depth_noise:
-            depth_image = self._add_depth_artifacts(
+            depth_images = self._add_depth_artifacts(
                 depth_images,
                 self.cfg.depth.artifact_prob,
                 self.cfg.depth.artifact_height_mean_std,
@@ -377,11 +377,17 @@ class LeggedRobot(BaseTask):
         # print(f"min gradient contour: {torch.min(gradients)}")
         # print(f"mean gradient contour: {torch.mean(gradients)}")
         # print(f"90 quantile: {torch.quantile(gradients, 0.9)}")
-        mask = gradients > self.cfg.depth.contour_threshold
+        img_edges = torch.zeros(depth_images.shape, dtype=torch.bool, device=self.device, requires_grad=False)
+        n_rows_skip = 5
+        img_edges[:, :n_rows_skip, :] = True
+        img_edges[:, -n_rows_skip:, :] = True
+        img_edges[:, :, :n_rows_skip] = True
+        img_edges[:, :, -n_rows_skip:] = True
+        mask = torch.logical_and((gradients > self.cfg.depth.contour_threshold), torch.logical_not(img_edges))
         rand_flts = torch.rand(depth_images[mask].shape, device=self.device)
         depth_images[mask] = torch.where(
             rand_flts < self.cfg.depth.contour_nuke_prob,
-            self.cfg.depth.far_clip,
+            self.cfg.depth.near_clip,
             depth_images[mask],
         )
         return depth_images
@@ -463,7 +469,7 @@ class LeggedRobot(BaseTask):
             b,
         )
         depth_images = torch.where(
-            art_mask, depth_images.new_full((), self.cfg.depth.far_clip), depth_images
+            art_mask, depth_images.new_full((), self.cfg.depth.near_clip), depth_images
         )
         return depth_images
 

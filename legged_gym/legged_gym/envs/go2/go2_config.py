@@ -171,12 +171,12 @@ class Go2RoughCfg(LeggedRobotCfg):
         invert = True
 
         artifact_prob = 0.001
-        artifact_height_mean_std = (3, 3)
+        artifact_height_mean_std = (1, 1)
         artifact_width_mean_std = (3, 3)
 
-        contour_detection_kernel_size = 3
-        contour_threshold = 1.0
-        contour_nuke_prob = 0.1
+        contour_detection_kernel_size = 1
+        contour_threshold = 0.5
+        contour_nuke_prob = 0.2
 
         iterations_step_with_teacher_before_student = 0
         do_depth_noise = True
