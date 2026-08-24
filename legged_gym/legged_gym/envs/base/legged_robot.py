@@ -228,11 +228,11 @@ class LeggedRobot(BaseTask):
     def get_history_observations(self):
         return self.obs_history_buf
 
-    def normalize_depth_image(self, depth_image):
-        depth_image = (depth_image - self.cfg.depth.near_clip) / (
+    def normalize_depth_images(self, depth_images):
+        depth_images = (depth_images - self.cfg.depth.near_clip) / (
             self.cfg.depth.far_clip - self.cfg.depth.near_clip
         ) - 0.5
-        return depth_image
+        return depth_images
 
     @torch.no_grad()
     def process_depth_images(self, depth_images, env_id):
@@ -286,35 +286,35 @@ class LeggedRobot(BaseTask):
             im_pil.save(os.path.join(file_dir, f"img_3_cropped_{str(0).zfill(7)}.jpeg"))
         if self.cfg.depth.do_depth_noise:
             depth_image = self._add_depth_artifacts(
-                depth_image,
+                depth_images,
                 self.cfg.depth.artifact_prob,
                 self.cfg.depth.artifact_height_mean_std,
                 self.cfg.depth.artifact_width_mean_std,
             )
             if debug_img:
                 im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
                 im_pil.save(os.path.join(file_dir, f"img_4_artifacts_{str(0).zfill(7)}.jpeg"))
-            depth_image = self.gaussian_blur_transform(depth_image[None, :]).squeeze()
+            depth_images = self.gaussian_blur_transform(depth_images)
             if debug_img:
                 im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
                 im_pil.save(os.path.join(file_dir, f"img_5_gaussian_blur_{str(0).zfill(7)}.jpeg"))
-        depth_image = self.resize_transform(depth_image[None, :]).squeeze()
+        depth_images = self.resize_transform(depth_images)
         if debug_img:
             im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
             im_pil.save(os.path.join(file_dir, f"img_6_resized_{str(0).zfill(7)}.jpeg"))
-        depth_image = self.normalize_depth_image(depth_image)
+        depth_images = self.normalize_depth_images(depth_images)
         if debug_img:
             im_pil = PIL.Image.fromarray(cv2.applyColorMap(
-                cv2.convertScaleAbs(depth_image.cpu().numpy(), alpha=30), cv2.COLORMAP_JET
+                cv2.convertScaleAbs(depth_images[env_id].cpu().numpy(), alpha=30), cv2.COLORMAP_JET
             ))
             im_pil.save(os.path.join(file_dir, f"img_7_norm_{str(0).zfill(7)}.jpeg"))
-        return depth_image
+        return depth_images
 
     @torch.no_grad()
     def form_artifacts(
@@ -325,42 +325,44 @@ class LeggedRobot(BaseTask):
         bottoms,  # artifacts positions (in pixel) shape (n_,)
         lefts,
         rights,
+        img_idx,  # which image (0..num_images-1) each artifact belongs to, shape (n_,)
+        num_images,
     ):
-        """Paste an artifact to the depth image.
+        """Paste artifacts onto a batch of depth images.
         NOTE: Using the paradigm of spatial transformer network to build the artifacts of the
-        entire depth image.
+        entire depth image. Every artifact in the batch (regardless of which image it belongs
+        to) is sampled in a single grid_sample call, then scattered into its owning image via
+        img_idx.
         """
-        batch_size = tops.shape[0]
+        n_artifacts = tops.shape[0]
         tops, bottoms = tops[:, None, None], bottoms[:, None, None]
         lefts, rights = lefts[:, None, None], rights[:, None, None]
 
         # build the source patch
-        source_patch = torch.zeros((batch_size, 1, 25, 25), device=self.device)
+        source_patch = torch.zeros((n_artifacts, 1, 25, 25), device=self.device)
         source_patch[:, :, 1:24, 1:24] = 1.0
 
         # build the grid
-        grid = torch.zeros((batch_size, H, W, 2), device=self.device)
+        grid = torch.zeros((n_artifacts, H, W, 2), device=self.device)
         grid[..., 0] = torch.linspace(-1, 1, W, device=self.device).view(1, 1, W)
         grid[..., 1] = torch.linspace(-1, 1, H, device=self.device).view(1, H, 1)
         grid[..., 0] = (grid[..., 0] * W + W - rights - lefts) / (rights - lefts)
         grid[..., 1] = (grid[..., 1] * H + H - bottoms - tops) / (bottoms - tops)
 
-        # sample using the grid and form the artifacts for the entire depth image
-        artifacts = torch.clip(
-            F.grid_sample(
-                source_patch,
-                grid,
-                mode="bilinear",
-                padding_mode="zeros",
-                align_corners=False,
-            )
-            .sum(dim=0)
-            .view(H, W),
-            0,
-            1,
-        )
+        # sample using the grid to get one artifact stamp per artifact instance
+        artifacts = F.grid_sample(
+            source_patch,
+            grid,
+            mode="bilinear",
+            padding_mode="zeros",
+            align_corners=False,
+        ).squeeze(1)  # (n_artifacts, H, W)
 
-        return artifacts.bool()
+        # scatter each artifact stamp into its owning image, then collapse overlaps
+        per_image = torch.zeros((num_images, H, W), device=self.device)
+        per_image.index_add_(0, img_idx, artifacts)
+
+        return torch.clip(per_image, 0, 1).bool()
 
     def _add_depth_contour(self, depth_images):
         gradients = F.max_pool2d(
@@ -386,42 +388,42 @@ class LeggedRobot(BaseTask):
 
     def _add_depth_artifacts(
         self,
-        depth_image,
+        depth_images,
         artifacts_prob,
         artifacts_height_mean_std,
         artifacts_width_mean_std,
     ):
-
+        # depth_images: (B, H, W)
         # artifacts_height_mean_std is (usual height, std dev of height)
         # artifacts_width_mean_std is (usual_width, std dev of width)
 
-        h, w = depth_image.shape
+        b, h, w = depth_images.shape
 
         def _clip(x, dim):
             return torch.clip(x, 0.0, (h, w)[dim])
 
-        # random patched artifacts
+        # random patched artifacts, independently sampled per image in the batch
         artifacts_mask = (
             torch.rand(
-                (h, w),
-                device=self.device,
-            )
-            < artifacts_prob
-        )
-        artifacts_mask = (
-            torch.rand(
-                (self.cfg.depth.original[0], self.cfg.depth.original[1]),
+                (b, h, w),
                 device=self.device,
             )
             < artifacts_prob
         )
 
+        # (n_artifacts, 3): columns are (batch idx, row, col)
         artifacts_coord = torch.nonzero(artifacts_mask).to(torch.float32)
+        img_idx = artifacts_coord[:, 0].long()
+        n_artifacts = artifacts_coord.shape[0]
+
+        if n_artifacts == 0:
+            return depth_images
+
         artifacts_size = (
             torch.clip(
                 artifacts_height_mean_std[0]
                 + torch.randn(
-                    (artifacts_coord.shape[0],),
+                    (n_artifacts,),
                     device=self.device,
                 )
                 * artifacts_height_mean_std[1],
@@ -431,7 +433,7 @@ class LeggedRobot(BaseTask):
             torch.clip(
                 artifacts_width_mean_std[0]
                 + torch.randn(
-                    (artifacts_coord.shape[0],),
+                    (n_artifacts,),
                     device=self.device,
                 )
                 * artifacts_width_mean_std[1],
@@ -441,13 +443,13 @@ class LeggedRobot(BaseTask):
         )
 
         artifacts_top_left = (
-            _clip(artifacts_coord[:, 0] - artifacts_size[0] / 2, 0),
-            _clip(artifacts_coord[:, 1] - artifacts_size[1] / 2, 1),
+            _clip(artifacts_coord[:, 1] - artifacts_size[0] / 2, 0),
+            _clip(artifacts_coord[:, 2] - artifacts_size[1] / 2, 1),
         )
 
         artifacts_bottom_right = (
-            _clip(artifacts_coord[:, 0] + artifacts_size[0] / 2, 0),
-            _clip(artifacts_coord[:, 1] + artifacts_size[1] / 2, 1),
+            _clip(artifacts_coord[:, 1] + artifacts_size[0] / 2, 0),
+            _clip(artifacts_coord[:, 2] + artifacts_size[1] / 2, 1),
         )
 
         art_mask = self.form_artifacts(
@@ -457,9 +459,13 @@ class LeggedRobot(BaseTask):
             artifacts_bottom_right[0],
             artifacts_top_left[1],
             artifacts_bottom_right[1],
+            img_idx,
+            b,
         )
-        depth_image[art_mask] = self.cfg.depth.far_clip
-        return depth_image
+        depth_images = torch.where(
+            art_mask, depth_images.new_full((), self.cfg.depth.far_clip), depth_images
+        )
+        return depth_images
 
     def crop_depth_images(self, depth_images):
         return depth_images[:, 
@@ -494,6 +500,19 @@ class LeggedRobot(BaseTask):
             )
             self.depth_working_buffer[i] = gymtorch.wrap_tensor(depth_image_)
         
+        new_depth_imgs = self.process_depth_images(self.depth_working_buffer, self.lookat_id)
+
+        init_flag = self.episode_length_buf <= 1
+        shifted_buffer = torch.cat(
+            [self.depth_buffer[:, 1:], new_depth_imgs.unsqueeze(1)], dim=1
+        )
+        init_buffer = new_depth_imgs.unsqueeze(1).expand(
+            -1, self.cfg.depth.buffer_len, -1, -1
+        )
+        self.depth_buffer = torch.where(
+            init_flag[:, None, None, None], init_buffer, shifted_buffer
+        )
+
         # do processing in batches...
 
 
@@ -515,7 +534,6 @@ class LeggedRobot(BaseTask):
             #         debug_str += f"{k}: {v}\n"
             #     print(f"raw img_stats: \n{debug_str}")
 
-            depth_image = self.process_depth_image(depth_image, i)
 
             # if i == self.lookat_id:
             #     proc_img = depth_image.clone().detach().cpu().numpy()
@@ -533,19 +551,7 @@ class LeggedRobot(BaseTask):
             #         debug_str += f"{k}: {v}\n"
             #     print(f"processed img_stats: \n{debug_str}")
 
-            init_flag = self.episode_length_buf <= 1
-            if init_flag[i]:
-                self.depth_buffer[i] = torch.stack(
-                    [depth_image] * self.cfg.depth.buffer_len, dim=0
-                )
-            else:
-                self.depth_buffer[i] = torch.cat(
-                    [
-                        self.depth_buffer[i, 1:],
-                        depth_image.to(self.device).unsqueeze(0),
-                    ],
-                    dim=0,
-                )
+
 
         self.gym.end_access_image_tensors(self.sim)
 
