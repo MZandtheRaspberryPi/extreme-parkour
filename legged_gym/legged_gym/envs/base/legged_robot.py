@@ -367,12 +367,12 @@ class LeggedRobot(BaseTask):
     def _add_depth_contour(self, depth_images):
         gradients = F.max_pool2d(
             torch.abs(
-                F.conv2d(depth_images, self.contour_detection_kernel, padding=1)
+                F.conv2d(depth_images.unsqueeze(1), self.contour_detection_kernel, padding=1)
             ).max(dim=-3, keepdim=True)[0],
             kernel_size=self.cfg.depth.contour_detection_kernel_size,
             stride=1,
             padding=int(self.cfg.depth.contour_detection_kernel_size / 2),
-        )
+        ).squeeze(1)
         # print(f"max gradient contour: {torch.max(gradients)}")
         # print(f"min gradient contour: {torch.min(gradients)}")
         # print(f"mean gradient contour: {torch.mean(gradients)}")
