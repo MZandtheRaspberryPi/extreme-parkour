@@ -785,26 +785,26 @@ class LeggedRobot(BaseTask):
         self.rotation_end_idx = 5
 
         self.cmd_start_idx = 5
-        self.command_end_idx = 8
+        self.command_end_idx = 6
 
-        self.dof_pos_start_idx = 8
-        self.dof_pos_end_idx = 20
-        self.dof_vel_start_idx = 20
-        self.dof_vel_end_idx = 32
+        self.dof_pos_start_idx = 6
+        self.dof_pos_end_idx = 18
+        self.dof_vel_start_idx = 18
+        self.dof_vel_end_idx = 30
 
-        self.contact_filt_start_idx = 44
-        self.contact_filt_end_idx = 48
+        self.contact_filt_start_idx = 42
+        self.contact_filt_end_idx = 46
 
-        self.priv_obs_lin_vel_start_idx = 48
-        self.priv_obs_lin_vel_end_idx = 51
-        self.priv_obs_target_yaw_start_idx = 51
-        self.priv_obs_target_yaw_end_idx = 53
-        self.priv_obs_mass_params_start_idx = 53
-        self.priv_obs_mass_params_end_idx = 57
-        self.priv_obs_friction_coeffs_start_idx = 57
-        self.priv_obs_friction_coeffs_end_idx = 58
-        self.priv_obs_motor_strength_start_idx = 58
-        self.priv_obs_motor_strength_end_idx = 82
+        self.priv_obs_lin_vel_start_idx = 46
+        self.priv_obs_lin_vel_end_idx = 49
+        self.priv_obs_target_yaw_start_idx = 49
+        self.priv_obs_target_yaw_end_idx = 51
+        self.priv_obs_mass_params_start_idx = 51
+        self.priv_obs_mass_params_end_idx = 55
+        self.priv_obs_friction_coeffs_start_idx = 55
+        self.priv_obs_friction_coeffs_end_idx = 56
+        self.priv_obs_motor_strength_start_idx = 56
+        self.priv_obs_motor_strength_end_idx = 80
 
         # ang vel
         noise_vec[self.ang_vel_start_idx : self.ang_vel_end_idx] = (
@@ -838,13 +838,12 @@ class LeggedRobot(BaseTask):
                 self.base_ang_vel,  # [1,3] 0, 1, 2
                 imu_obs,  # [1,2] 3, 4
                 self.commands[:, 0:1],  # 5
-                # 0.0 * self.commands[:, 1:3],  # 6, 7
                 self.reindex(
                     (self.dof_pos - self.default_dof_pos_all)
-                ),  # 8-19 inclusive
-                self.reindex(self.dof_vel),  # 20 - 31 inclusive
-                self.reindex(self.action_history_buf[:, -1]),  # 32 - 43 inclusive
-                self.reindex_feet(self.contact_filt.float() - 0.5),  # 44 - 47 inclusive
+                ),  # 6-17 inclusive
+                self.reindex(self.dof_vel),  # 18 - 29 inclusive
+                self.reindex(self.action_history_buf[:, -1]),  # 30 - 41 inclusive
+                self.reindex_feet(self.contact_filt.float() - 0.5),  # 42 - 45 inclusive
             ),
             dim=-1,
         )
