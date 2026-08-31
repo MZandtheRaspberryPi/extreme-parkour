@@ -137,10 +137,10 @@ class Go2RoughCfg(LeggedRobotCfg):
         # degrees, euler
 
         # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
-        position = dict(mean=[0.29362598, 0.01703454,  0.11068474], std=[0.0, 0.0, 0.0])
+        position = dict(mean=[0.29362598, 0.01703454,  0.11068474], std=[0.001, 0.001, 0.0001])
 
-        angle_min = [0.88667510628, 24.7987764776, -0.0203455]
-        angle_max = [0.88667510628, 24.7987764776, -0.0203455]
+        angle_min = [-1, 23.5, -0.25]
+        angle_max = [1, 24.8, 0.25]
         # angle_min = [0.0, 23.0, 0.0]
         # angle_max = [0.0, 23.0, 0.0]
 
@@ -153,7 +153,7 @@ class Go2RoughCfg(LeggedRobotCfg):
 
         # realsense d435f
         # https://store.realsenseai.com/buy-intel-realsense-depth-camera-d435f.html, FOV 87
-        horizontal_fov = [87, 87]
+        horizontal_fov = [86.5, 87.5]
         # horizontal_fov = [87, 87]
         # this is from original image size
         left_clip = 20
