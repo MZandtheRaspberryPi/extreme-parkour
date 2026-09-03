@@ -138,7 +138,7 @@ class LeggedRobotCfg(BaseConfig):
         dis_noise = 0.0
         # dis_noise = 0.00
         gaussian_blur_kernel = 3
-        gaussian_blur_sigma = (2.0, 2.0)
+        gaussian_blur_sigma = (1.5, 1.5)
 
         scale = 1
         invert = True
