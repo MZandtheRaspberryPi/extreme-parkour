@@ -57,7 +57,7 @@ class Go2RoughCfg(LeggedRobotCfg):
         rear_hip_names = ["RL_hip_joint", "RR_hip_joint"]
         penalize_contacts_on = ["base", "Head", "thigh", "calf"]
         terminate_after_contacts_on = []  # , "thigh", "calf"]
-        self_collisions = 1  # 1 to disable, 0 to enable...bitwise filter
+        self_collisions = 0  # 1 to disable, 0 to enable...bitwise filter
         sdk_dof_range = go2_const_dof_range
         dof_velocity_override = 35.0
 
