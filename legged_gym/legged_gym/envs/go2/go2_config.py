@@ -137,10 +137,10 @@ class Go2RoughCfg(LeggedRobotCfg):
         # degrees, euler
 
         # position = dict(mean=[0.28638, -0.0175, 0.14], std=[0.01, 0.0025, 0.02])
-        position = dict(mean=[0.32, 0.015,  0.15], std=[0.01, 0.0025, 0.01])
+        position = dict(mean=[0.32, 0.01703454,  0.15], std=[0.001, 0.001, 0.001])
 
-        angle_min = [-1, 21.2, -0.25]
-        angle_max = [1, 24.6, 0.25]
+        angle_min = [-1, 22.5, -0.25]
+        angle_max = [1, 24, 0.25]
         # angle_min = [0.0, 23.0, 0.0]
         # angle_max = [0.0, 23.0, 0.0]
 
